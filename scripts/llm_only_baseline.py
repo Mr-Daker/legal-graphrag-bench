@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from gemini_client import DEFAULT_MODEL, generate_text
+from gemini_client import DEFAULT_MODEL, compute_cost, generate_text
 
 
 DEFAULT_QUESTIONS = Path("data/eval/questions_dev.json")
@@ -41,6 +41,7 @@ def run_question(question: str, question_id: str, model: str) -> dict[str, Any]:
         "completion_tokens": result.completion_tokens,
         "total_tokens": result.total_tokens,
         "latency_ms": round(result.latency_ms, 2),
+        "cost_usd": compute_cost(result.model, result.prompt_tokens, result.completion_tokens),
         "retrieved_context": [],
     }
 

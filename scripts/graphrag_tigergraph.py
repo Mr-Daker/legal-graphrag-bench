@@ -14,7 +14,7 @@ from urllib import error, parse, request
 import tiktoken
 from dotenv import load_dotenv
 
-from gemini_client import DEFAULT_MODEL, generate_text
+from gemini_client import DEFAULT_MODEL, compute_cost, generate_text
 
 
 DEFAULT_QUESTIONS = Path("data/eval/questions_dev.json")
@@ -417,6 +417,7 @@ def answer_query(
         "total_tokens": result.total_tokens,
         "latency_ms": round(end_to_end_ms, 2),
         "generation_latency_ms": round(result.latency_ms, 2),
+        "cost_usd": compute_cost(result.model, result.prompt_tokens, result.completion_tokens),
         "context_sources": sorted({item.get("source", "unknown") for item in retrieved}),
         "retrieved_context": retrieved,
     }

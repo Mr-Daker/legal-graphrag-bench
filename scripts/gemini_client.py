@@ -18,6 +18,32 @@ DEFAULT_XAI_MODEL = "grok-4.20-non-reasoning"
 XAI_BASE_URL = "https://api.x.ai/v1"
 PROVIDERS = {"gemini", "xai"}
 
+# Pricing per 1M tokens (USD) — used for cost_usd field in pipeline outputs.
+# Figures are approximate public rates; free-tier usage has $0 marginal cost
+# but we show the equivalent paid-tier cost for benchmarking comparisons.
+_PRICE_TABLE: dict[str, tuple[float, float]] = {
+    # model_name: (price_per_1M_input, price_per_1M_output)
+    "gemini-2.5-flash-lite":         (0.10,  0.40),
+    "gemini-3.1-flash-lite":         (0.10,  0.40),
+    "gemini-3-flash-preview":        (0.15,  0.60),
+    "gemini-flash-lite-latest":      (0.10,  0.40),
+    "gemini-flash-latest":           (0.15,  0.60),
+    "gemini-3.1-flash-lite-preview": (0.10,  0.40),
+    "gemini-1.5-flash":              (0.075, 0.30),
+    "gemini-2.0-flash":              (0.10,  0.40),
+}
+_DEFAULT_PRICE = (0.10, 0.40)  # fallback for unknown models
+
+
+def compute_cost(model: str, prompt_tokens: int, completion_tokens: int) -> float:
+    """Return estimated cost in USD for a single LLM call."""
+    price_in, price_out = _PRICE_TABLE.get(model, _DEFAULT_PRICE)
+    return round(
+        (prompt_tokens / 1_000_000) * price_in
+        + (completion_tokens / 1_000_000) * price_out,
+        8,
+    )
+
 # Models tried in order when daily quota is exhausted on the primary model.
 # Each has its own 20 RPD free-tier bucket, so rotating lets us run up to
 # len(MODEL_ROTATION) × 20 calls per day.

@@ -12,7 +12,7 @@ import numpy as np
 from google.genai import types
 from tqdm import tqdm
 
-from gemini_client import DEFAULT_MODEL, generate_text, load_client
+from gemini_client import DEFAULT_MODEL, compute_cost, generate_text, load_client
 
 
 DEFAULT_CHUNKS = Path("data/processed/chunks.jsonl")
@@ -321,6 +321,7 @@ def answer_query(
         "total_tokens": result.total_tokens,
         "latency_ms": round(end_to_end_ms, 2),
         "generation_latency_ms": round(result.latency_ms, 2),
+        "cost_usd": compute_cost(result.model, result.prompt_tokens, result.completion_tokens),
         "retrieved_context": retrieved,
     }
 
