@@ -1,0 +1,26 @@
+USE GRAPH LegalGraphRAG
+
+CREATE OR REPLACE DISTRIBUTED QUERY graphrag_case_context(
+  STRING case_id,
+  INT chunk_limit = 8
+) FOR GRAPH LegalGraphRAG {
+  allCases = {LegalCase.*};
+
+  seed = SELECT s
+    FROM allCases:s
+    WHERE s.case_id == case_id;
+
+  chunks = SELECT c
+    FROM seed:s -(HAS_CHUNK:e)-> Chunk:c
+    ORDER BY c.chunk_index ASC
+    LIMIT chunk_limit;
+
+  cites = SELECT ci
+    FROM seed:s -(CITES:e)-> Citation:ci;
+
+  PRINT seed;
+  PRINT chunks;
+  PRINT cites;
+}
+
+INSTALL QUERY graphrag_case_context

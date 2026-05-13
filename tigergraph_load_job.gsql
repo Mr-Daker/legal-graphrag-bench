@@ -1,0 +1,46 @@
+USE GRAPH LegalGraphRAG
+
+CREATE LOADING JOB load_legal_graphrag {
+  DEFINE FILENAME legal_cases;
+  DEFINE FILENAME chunks;
+  DEFINE FILENAME citations;
+  DEFINE FILENAME has_chunk;
+  DEFINE FILENAME next_chunk;
+  DEFINE FILENAME cites;
+
+  LOAD legal_cases TO VERTEX LegalCase VALUES (
+    $0,
+    $1,
+    $2,
+    $3,
+    $4
+  ) USING header="true", separator="|";
+
+  LOAD chunks TO VERTEX Chunk VALUES (
+    $0,
+    $1,
+    gsql_to_int($2),
+    gsql_to_int($3),
+    $4
+  ) USING header="true", separator="|";
+
+  LOAD citations TO VERTEX Citation VALUES (
+    $0,
+    $1
+  ) USING header="true", separator="|";
+
+  LOAD has_chunk TO EDGE HAS_CHUNK VALUES (
+    $0,
+    $1
+  ) USING header="true", separator="|";
+
+  LOAD next_chunk TO EDGE NEXT_CHUNK VALUES (
+    $0,
+    $1
+  ) USING header="true", separator="|";
+
+  LOAD cites TO EDGE CITES VALUES (
+    $0,
+    $1
+  ) USING header="true", separator="|";
+}

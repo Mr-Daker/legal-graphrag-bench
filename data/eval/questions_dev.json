@@ -1,0 +1,123 @@
+[
+  {
+    "id": "q001",
+    "type": "local_factual",
+    "question": "What court decided the case State v. Howerton?",
+    "reference_answer": "The case State v. Howerton was decided by the Court of Criminal Appeals of Oklahoma."
+  },
+  {
+    "id": "q002",
+    "type": "global_synthesis",
+    "question": "What are common legal themes across criminal appeal opinions?",
+    "reference_answer": "Common themes include standards of review, evidentiary disputes, criminal procedure violations, sentencing challenges, ineffective assistance of counsel claims, preservation of error, and application of precedent."
+  },
+  {
+    "id": "q003",
+    "type": "multi_hop",
+    "question": "How do cited precedents influence a court's reasoning in criminal appeal opinions?",
+    "reference_answer": "Cited precedents provide controlling rules, standards of review, or analogies that appellate courts apply to the facts of a current dispute, establishing whether errors were harmless or reversible."
+  },
+  {
+    "id": "q004",
+    "type": "local_factual",
+    "question": "What is the citation for the case Bruce v. ICI Americas, Inc.?",
+    "reference_answer": "The citation for Bruce v. ICI Americas, Inc. is 933 F. Supp. 781 (1996)."
+  },
+  {
+    "id": "q005",
+    "type": "local_factual",
+    "question": "In which state was the case Bell v. Turner decided, and what appellate district heard it?",
+    "reference_answer": "Bell v. Turner was decided in Ohio, in the Fourth Appellate District of the Court of Appeals of Ohio, Highland County."
+  },
+  {
+    "id": "q006",
+    "type": "local_factual",
+    "question": "What court decided Rosetta Stone Ltd. v. Google, Inc. and what is the citation?",
+    "reference_answer": "Rosetta Stone Ltd. v. Google, Inc. was decided by the United States Court of Appeals for the Fourth Circuit, citation 676 F.3d 144 (2012)."
+  },
+  {
+    "id": "q007",
+    "type": "local_factual",
+    "question": "What court decided Commonwealth v. Jarabek, and what citations does the case carry?",
+    "reference_answer": "Commonwealth v. Jarabek was decided by the Supreme Judicial Court of Massachusetts in 1981. Its citations are 384 Mass. 293 and 424 N.E.2d 491."
+  },
+  {
+    "id": "q008",
+    "type": "local_factual",
+    "question": "What court decided State v. Jones in the 2003 Idaho case involving defendant Michael Wayne Jones?",
+    "reference_answer": "The 2003 Idaho case State v. Jones was decided by the Court of Appeals of Idaho. Its citations are 139 Idaho 299 and 77 P.3d 988."
+  },
+  {
+    "id": "q009",
+    "type": "local_factual",
+    "question": "What is the citation for Forgus v. Hodnett and which court decided it?",
+    "reference_answer": "Forgus v. Hodnett was decided by the Supreme Court of Texas in 1966. Its citation is 405 S.W.2d 337."
+  },
+  {
+    "id": "q010",
+    "type": "multi_hop",
+    "question": "How did the federal district court in Sanders Ex Rel. Rayl v. Kansas Department of Social and Rehabilitation Services (317 F. Supp. 2d 1233) analyze the civil rights claims brought against the state agency, and what constitutional protections were at issue?",
+    "reference_answer": "In Sanders Ex Rel. Rayl v. Kansas Department of Social and Rehabilitation Services (317 F. Supp. 2d 1233), the United States District Court for the District of Kansas analyzed civil rights claims against a state agency, examining constitutional due process and equal protection claims, and considered whether the state agency's actions violated the plaintiff's federally protected rights, including the applicability of sovereign immunity defenses."
+  },
+  {
+    "id": "q011",
+    "type": "global_synthesis",
+    "question": "What types of courts are represented across the case corpus?",
+    "reference_answer": "The corpus includes United States Courts of Appeals from multiple circuits, United States District Courts, state supreme courts, and state intermediate appellate courts from Ohio, Tennessee, Illinois, Idaho, and other states."
+  },
+  {
+    "id": "q012",
+    "type": "global_synthesis",
+    "question": "What constitutional rights are most frequently raised in the criminal appeal cases in this corpus?",
+    "reference_answer": "The most frequently raised constitutional rights include Fourth Amendment search and seizure protections, Fifth Amendment double jeopardy and self-incrimination rights, Sixth Amendment rights to counsel and fair trial, and Fourteenth Amendment due process and equal protection guarantees."
+  },
+  {
+    "id": "q013",
+    "type": "global_synthesis",
+    "question": "How do appellate courts in this corpus typically address claims of insufficient evidence?",
+    "reference_answer": "Appellate courts review sufficiency of the evidence under a deferential standard, asking whether any rational trier of fact could have found the essential elements beyond a reasonable doubt when viewing evidence in the light most favorable to the prosecution. Courts rarely reverse solely on sufficiency grounds."
+  },
+  {
+    "id": "q014",
+    "type": "global_synthesis",
+    "question": "What patterns appear in civil cases involving government or state agencies as defendants in this corpus?",
+    "reference_answer": "Civil cases against government or state agencies commonly raise claims of sovereign immunity, constitutional due process violations, civil rights claims under 42 U.S.C. section 1983, and administrative procedure challenges. Courts analyze whether the agency acted within its statutory authority and whether immunity defenses apply."
+  },
+  {
+    "id": "q015",
+    "type": "global_synthesis",
+    "question": "What types of civil disputes appear in this corpus alongside the criminal cases?",
+    "reference_answer": "Alongside criminal appeals, the corpus contains civil cases involving contract disputes, tort claims, insurance coverage disputes, intellectual property such as trademark, civil rights, bankruptcy, and real property matters in both state and federal courts."
+  },
+  {
+    "id": "q016",
+    "type": "global_synthesis",
+    "question": "What are the most common procedural grounds on which courts deny or dismiss appeals in this corpus?",
+    "reference_answer": "Courts most commonly deny or dismiss appeals on procedural default or waiver due to failure to preserve error at trial, lack of jurisdiction, untimely filing, failure to present a cognizable legal claim, and res judicata or collateral estoppel barring re-litigation."
+  },
+  {
+    "id": "q017",
+    "type": "multi_hop",
+    "question": "How do courts in this corpus distinguish between direct appeals and post-conviction relief petitions?",
+    "reference_answer": "Direct appeals challenge errors in trial proceedings and are filed immediately after conviction, while post-conviction relief petitions like habeas corpus are collateral attacks raising constitutional claims not addressed at trial. Courts apply stricter procedural bars to post-conviction petitions and require showing cause and prejudice for any default."
+  },
+  {
+    "id": "q018",
+    "type": "multi_hop",
+    "question": "How does the standard of review applied by an appellate court affect the outcome of cases involving evidentiary rulings?",
+    "reference_answer": "Appellate courts review evidentiary rulings under an abuse of discretion standard, giving significant deference to the trial judge. A ruling is reversed only if clearly unreasonable or arbitrary. This high bar means many challenged rulings are affirmed even where the appellate court might have decided differently, limiting reversal to egregious errors affecting substantial rights."
+  },
+  {
+    "id": "q019",
+    "type": "multi_hop",
+    "question": "How do federal circuit courts in this corpus approach constitutional questions differently from state appellate courts?",
+    "reference_answer": "Federal circuit courts are bound by Supreme Court precedent on constitutional questions and apply de novo review to constitutional issues, while state appellate courts may apply state constitutional provisions offering greater protections than federal minimums. Federal courts also review state prisoner constitutional claims through habeas corpus jurisdiction, creating a two-tier review structure."
+  },
+  {
+    "id": "q020",
+    "type": "multi_hop",
+    "question": "In criminal cases where ineffective assistance of counsel is claimed, how do courts in this corpus apply the two-part Strickland test?",
+    "reference_answer": "Courts apply the Strickland v. Washington two-part test by asking whether counsel's performance fell below an objective standard of reasonableness, and whether there is a reasonable probability that the outcome would have differed but for counsel's errors. Courts apply a strong presumption of reasonable professional judgment, making most ineffective assistance claims difficult to sustain."
+  }
+]
+

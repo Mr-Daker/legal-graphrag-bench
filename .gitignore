@@ -1,0 +1,46 @@
+# --- Secrets & environment ---
+.env
+*.env
+!config.example.env
+
+# --- Python virtual environments ---
+.venv/
+.venv-win/
+venv/
+env/
+
+# --- Python cache ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# --- Data (raw, processed, results — keep only eval questions) ---
+data/raw/
+data/processed/
+data/index/
+data/results/
+data/reports/
+data/tigergraph/
+
+# --- Node / front-end (vendor graphrag-ui) ---
+vendor/graphrag/graphrag-ui/node_modules/
+vendor/graphrag/graphrag-ui/.pnpm-store/
+
+# --- OS & editor ---
+.DS_Store
+Thumbs.db
+.vscode/settings.json
+*.swp
+*.swo
+
+# --- Misc cache ---
+.cache/
+.huggingface/
+*.log
+
