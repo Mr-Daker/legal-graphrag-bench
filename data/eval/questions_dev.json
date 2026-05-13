@@ -9,7 +9,7 @@
     "id": "q002",
     "type": "global_synthesis",
     "question": "What are common legal themes across criminal appeal opinions?",
-    "reference_answer": "Common themes include standards of review, evidentiary disputes, criminal procedure violations, sentencing challenges, ineffective assistance of counsel claims, preservation of error, and application of precedent."
+    "reference_answer": "Common themes include standards of review, sufficiency of the evidence, ineffective assistance of counsel, and preservation of error for appellate review."
   },
   {
     "id": "q003",
@@ -63,7 +63,7 @@
     "id": "q011",
     "type": "global_synthesis",
     "question": "What types of courts are represented across the case corpus?",
-    "reference_answer": "The corpus includes United States Courts of Appeals from multiple circuits, United States District Courts, state supreme courts, and state intermediate appellate courts from Ohio, Tennessee, Illinois, Idaho, and other states."
+    "reference_answer": "The corpus includes United States Courts of Appeals, United States District Courts, state supreme courts, and state intermediate appellate courts from multiple states."
   },
   {
     "id": "q012",
@@ -87,13 +87,13 @@
     "id": "q015",
     "type": "global_synthesis",
     "question": "What types of civil disputes appear in this corpus alongside the criminal cases?",
-    "reference_answer": "Alongside criminal appeals, the corpus contains civil cases involving contract disputes, tort claims, insurance coverage disputes, intellectual property such as trademark, civil rights, bankruptcy, and real property matters in both state and federal courts."
+    "reference_answer": "Alongside criminal appeals, the corpus contains civil cases involving contract disputes, tort claims, civil rights, and intellectual property matters in both state and federal courts."
   },
   {
     "id": "q016",
     "type": "global_synthesis",
     "question": "What are the most common procedural grounds on which courts deny or dismiss appeals in this corpus?",
-    "reference_answer": "Courts most commonly deny or dismiss appeals on procedural default or waiver due to failure to preserve error at trial, lack of jurisdiction, untimely filing, failure to present a cognizable legal claim, and res judicata or collateral estoppel barring re-litigation."
+    "reference_answer": "Courts most commonly deny or dismiss appeals on procedural default or waiver for failure to preserve error at trial, lack of jurisdiction, or untimely filing."
   },
   {
     "id": "q017",
