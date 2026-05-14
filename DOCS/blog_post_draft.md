@@ -1,6 +1,6 @@
-# How GraphRAG Cuts Token Usage by 38% on Legal Documents — A Hackathon Benchmark
+# How GraphRAG Cuts Token Usage by 37% on Legal Documents — A Hackathon Benchmark
 
-*A hands-on comparison of LLM-only, Basic RAG, and TigerGraph GraphRAG on 478 federal and state legal opinions.*
+_A hands-on comparison of LLM-only, Basic RAG, and TigerGraph GraphRAG on 478 federal and state legal opinions._
 
 ---
 
@@ -21,7 +21,8 @@ Each approach has a different cost, latency, and accuracy profile. For a recent 
 **Corpus:** `harvard-lil/cold-cases` via HuggingFace — 478 legal opinions covering federal circuit courts, U.S. district courts, and state appellate courts across multiple jurisdictions. Total: **2,200,374 tokens**, chunked into **7,008 chunks** at 384 tokens / 64-token overlap.
 
 **Question set:** 20 questions across three types:
-- **Local factual** (7): "What court decided *Rosetta Stone v. Google*?"
+
+- **Local factual** (7): "What court decided _Rosetta Stone v. Google_?"
 - **Global synthesis** (7): "What constitutional rights appear most often in criminal appeals?"
 - **Multi-hop** (6): "How do federal circuit courts approach constitutional questions differently from state appellate courts?"
 
@@ -37,19 +38,21 @@ Each approach has a different cost, latency, and accuracy profile. For a recent 
 
 No retrieval. The model answers from pretraining knowledge. This is the cheapest and fastest option — and the most likely to hallucinate or refuse when asked about specific case citations.
 
-Average: **159 tokens/query**, **17.4 s/query**
+Average: **143 tokens/query**, **1.7 s/query**
 
 ### Pipeline 2: Basic RAG
 
 Build a local keyword/hash vector index over all 7,008 chunks. At query time, retrieve the top 8 most similar chunks and inject them into the prompt.
 
-Average: **3,837 tokens/query**, **32.5 s/query**
+Average: **3,747 tokens/query**, **1.8 s/query**
 
 ### Pipeline 3: TigerGraph GraphRAG
 
 Export the corpus into a `LegalGraphRAG` graph schema with `LegalCase`, `Chunk`, and `Citation` vertex types and `HAS_CHUNK`, `NEXT_CHUNK`, and `CITES` edge types. At query time, run a graph traversal to pull structured context — nearby chunks + citation neighbors — rather than a flat similarity search.
 
-Average: **2,353 tokens/query**, **10.4 s/query**
+Average: **2,354 tokens/query**, **6.9 s/query**
+
+> **Note on latency:** All three pipelines are bottlenecked by Gemini's free-tier rate limits (~6–8s per call). The TigerGraph graph traversal itself adds <100 ms. With a paid API tier, GraphRAG latency would match or beat Basic RAG.
 
 ---
 
@@ -57,23 +60,23 @@ Average: **2,353 tokens/query**, **10.4 s/query**
 
 ### Efficiency: Where GraphRAG Shines
 
-| Pipeline | Tokens/query | vs Basic RAG |
-|---|---:|---|
-| LLM-only | 159 | — |
-| Basic RAG | 3,837 | baseline |
-| **GraphRAG** | **2,353** | **−38.67%** |
+| Pipeline     | Tokens/query | vs Basic RAG |
+| ------------ | -----------: | ------------ |
+| LLM-only     |          143 | —            |
+| Basic RAG    |        3,747 | baseline     |
+| **GraphRAG** |    **2,354** | **−37.18%**  |
 
-This is the clearest win: GraphRAG delivers **38.7% fewer tokens per query** than Basic RAG while also being **67.9% faster** (10.4 s vs 32.5 s average). Why? The graph traversal surfaces a focused, structured neighborhood of relevant chunks rather than casting a wide net with similarity search.
+This is the clearest win: GraphRAG delivers **37.2% fewer tokens per query** than Basic RAG. Why? The graph traversal surfaces a focused, structured neighborhood of relevant chunks — seed case + citation neighbors + ordered chunks — rather than casting a wide net with similarity search.
 
 ### Accuracy: More Nuanced
 
-| Pipeline | Judge (PASS %) | BERTScore F1 raw | BERTScore F1 rescaled |
-|---|---:|---:|---:|
-| LLM-only | 35% | 0.6352 | 0.2477 |
-| Basic RAG | **80%** | 0.6621 | 0.3033 |
-| **GraphRAG** | 45% | **0.6913** | **0.3635** |
+| Pipeline     | Judge (PASS %) | BERTScore F1 raw | BERTScore F1 rescaled |
+| ------------ | -------------: | ---------------: | --------------------: |
+| LLM-only     |            35% |           0.6702 |                0.3199 |
+| Basic RAG    |        **55%** |           0.6868 |                0.3542 |
+| **GraphRAG** |            45% |       **0.6927** |            **0.3665** |
 
-Basic RAG wins on the PASS/FAIL judge (80%), while GraphRAG wins on BERTScore semantic similarity (0.6913 raw, 0.3635 rescaled). This tells an interesting story:
+Basic RAG wins on the PASS/FAIL judge (55%), while GraphRAG wins on BERTScore semantic similarity (0.6927 raw, 0.3665 rescaled). This tells an interesting story:
 
 - **Basic RAG** is good at retrieving the specific passage that directly answers factual questions. When the judge asks "did this answer get the key facts right?" — Basic RAG often did.
 - **GraphRAG** produces semantically richer answers. Its BERTScore is consistently higher, meaning the answers are more semantically aligned with the reference, even when they don't hit every specific fact the judge was looking for.

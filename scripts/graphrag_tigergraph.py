@@ -164,6 +164,17 @@ class TigerGraphClient:
         if self.token or not self.secret:
             return self.token
 
+        # TigerGraph Savanna (Cloud) uses POST /gsql/v1/tokens
+        try:
+            payload = self._request_json_post("/gsql/v1/tokens", {"secret": self.secret}, auth=False)
+            token = find_token(payload)
+            if token:
+                self.token = token
+                return token
+        except RuntimeError:
+            pass
+
+        # Legacy on-prem endpoints
         params = parse.urlencode({"secret": self.secret})
         for path in (f"/requesttoken?{params}", f"/restpp/requesttoken?{params}"):
             try:
@@ -204,6 +215,21 @@ class TigerGraphClient:
             raise RuntimeError(f"{method} {path} failed: HTTP {exc.code}: {detail}") from exc
         except error.URLError as exc:
             raise RuntimeError(f"{method} {path} failed: {exc.reason}") from exc
+
+    def _request_json_post(self, path: str, body: dict[str, Any], auth: bool) -> Any:
+        headers = {"Accept": "application/json", "Content-Type": "application/json"}
+        if auth and self.token:
+            headers["Authorization"] = f"Bearer {self.token}"
+        data = json.dumps(body).encode("utf-8")
+        req = request.Request(f"{self.host}{path}", data=data, method="POST", headers=headers)
+        try:
+            with request.urlopen(req, timeout=30) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")
+            raise RuntimeError(f"POST {path} failed: HTTP {exc.code}: {detail}") from exc
+        except error.URLError as exc:
+            raise RuntimeError(f"POST {path} failed: {exc.reason}") from exc
 
 
 def find_token(payload: Any) -> str | None:

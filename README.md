@@ -305,7 +305,7 @@ graph TD
 
     subgraph P3["Pipeline 3 — GraphRAG"]
         G1["graphrag_tigergraph.py"]
-        G2["TigerGraph LegalGraphRAG<br/>(local CSV fallback)"]
+        G2["TigerGraph Savanna API<br/>(LegalGraphRAG graph)"]
         G3["Graph context → Gemini"]
         G1 --> G2 --> G3
     end
@@ -331,35 +331,35 @@ Eval set: **20 questions** (7 local-factual · 7 global-synthesis · 6 multi-hop
 
 ### Efficiency (tokens per query)
 
-| Pipeline | Avg tokens/query | vs Basic RAG |
-|---|---:|---|
-| LLM-only | 158.95 | — |
-| Basic RAG | 3,837.00 | baseline |
-| **GraphRAG** | **2,353.20** | **−38.67% ✅ bonus** |
+| Pipeline     | Avg tokens/query | vs Basic RAG         |
+| ------------ | ---------------: | -------------------- |
+| LLM-only     |           143.30 | —                    |
+| Basic RAG    |         3,746.85 | baseline             |
+| **GraphRAG** |     **2,353.65** | **−37.18% ✅ bonus** |
 
-GraphRAG vs Basic RAG latency reduction: **67.86%**
+GraphRAG avg latency: **6,909 ms** · Basic RAG: **1,791 ms** (GraphRAG slower due to Gemini free-tier rate limits; TigerGraph graph traversal itself is <100 ms)
 
 ### Accuracy
 
 Judge: Gemini LLM-as-a-Judge with lenient partial-coverage prompt.  
 BERTScore model: `microsoft/deberta-xlarge-mnli`.
 
-| Pipeline | Judge pass rate | BERTScore F1 raw | BERTScore F1 rescaled |
-|---|---:|---:|---:|
-| LLM-only | 35% | 0.6352 | 0.2477 |
-| Basic RAG | **80%** | 0.6621 | 0.3033 |
-| **GraphRAG** | 45% | **0.6913** | **0.3635** |
+| Pipeline     | Judge pass rate | BERTScore F1 raw | BERTScore F1 rescaled |
+| ------------ | --------------: | ---------------: | --------------------: |
+| LLM-only     |             35% |           0.6702 |                0.3199 |
+| Basic RAG    |             55% |           0.6868 |                0.3542 |
+| **GraphRAG** |             45% |       **0.6927** |            **0.3665** |
 
 Bonus thresholds (hackathon brief):
 
-| Metric | Threshold | Status |
-|---|---|---|
-| LLM-as-a-Judge pass rate | ≥ 90% | Not met (best: 80%) |
-| BERTScore F1 rescaled | ≥ 0.55 | Not met (best: 0.3635) |
-| BERTScore F1 raw | ≥ 0.88 | Not met (best: 0.6913) |
-| GraphRAG token reduction vs Basic RAG | ≥ 30% | **✅ Met (38.67%)** |
+| Metric                                | Threshold | Status                 |
+| ------------------------------------- | --------- | ---------------------- |
+| LLM-as-a-Judge pass rate              | ≥ 90%     | Not met (best: 55%)    |
+| BERTScore F1 rescaled                 | ≥ 0.55    | Not met (best: 0.3665) |
+| BERTScore F1 raw                      | ≥ 0.88    | Not met (best: 0.6927) |
+| GraphRAG token reduction vs Basic RAG | ≥ 30%     | **✅ Met (37.18%)**    |
 
-> **Note on DeBERTa scores:** `deberta-xlarge-mnli` uses a tighter rescaling baseline than `distilbert-base-uncased`. With distilbert, GraphRAG scored raw=0.8391, rescaled=0.5179 (within 0.032 of the bonus threshold). GraphRAG ranks highest on BERTScore in both runs.
+> **Note on BERTScore model:** `deberta-xlarge-mnli` uses a tighter rescaling baseline than `distilbert-base-uncased`. With distilbert, GraphRAG scored raw=0.8403, rescaled=0.5216 (within 0.028 of the bonus threshold). GraphRAG ranks highest on BERTScore in both models. All v4 scores use deberta for consistency.
 
 ## Project Structure
 
@@ -413,4 +413,3 @@ TIGERGRAPH_GRAPH=LegalGraphRAG
 ```
 
 The pipelines fall back gracefully when TigerGraph cloud is unreachable (local CSV mode).
-
