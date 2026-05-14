@@ -335,9 +335,9 @@ Eval set: **20 questions** (7 local-factual · 7 global-synthesis · 6 multi-hop
 | ------------ | ---------------: | -------------------- |
 | LLM-only     |           143.30 | —                    |
 | Basic RAG    |         3,746.85 | baseline             |
-| **GraphRAG** |     **2,353.65** | **−37.18% ✅ bonus** |
+| **GraphRAG** |     **2,733.80** | **−27.04%**          |
 
-GraphRAG avg latency: **6,909 ms** · Basic RAG: **1,791 ms** (GraphRAG slower due to Gemini free-tier rate limits; TigerGraph graph traversal itself is <100 ms)
+GraphRAG avg latency: **36,154 ms** · Basic RAG: **1,791 ms** (GraphRAG slower — query routing fetches up to 8 cases for global/multi-hop queries; TigerGraph graph traversal itself is <100 ms)
 
 ### Accuracy
 
@@ -357,9 +357,11 @@ Bonus thresholds (hackathon brief):
 | LLM-as-a-Judge pass rate              | ≥ 90%     | Not met (best: 55%)    |
 | BERTScore F1 rescaled                 | ≥ 0.55    | Not met (best: 0.3665) |
 | BERTScore F1 raw                      | ≥ 0.88    | Not met (best: 0.6927) |
-| GraphRAG token reduction vs Basic RAG | ≥ 30%     | **✅ Met (37.18%)**    |
+| GraphRAG token reduction vs Basic RAG | ≥ 30%     | Not met (27.04%)       |
 
-> **Note on BERTScore model:** `deberta-xlarge-mnli` uses a tighter rescaling baseline than `distilbert-base-uncased`. With distilbert, GraphRAG scored raw=0.8403, rescaled=0.5216 (within 0.028 of the bonus threshold). GraphRAG ranks highest on BERTScore in both models. All v4 scores use deberta for consistency.
+> **Note on BERTScore model:** `deberta-xlarge-mnli` uses a tighter rescaling baseline than `distilbert-base-uncased`. With distilbert, GraphRAG scored raw=0.8403, rescaled=0.5216 (within 0.028 of the bonus threshold). GraphRAG ranks highest on BERTScore in both models. All v5 scores use deberta for consistency.
+>
+> **Note on v5 token count:** Query routing (v5) fetches up to 8 cases for global/multi-hop queries, increasing avg tokens from 2,354 (v4) to 2,734 — a quality-vs-efficiency trade-off that drops token reduction from 37.2% to 27.0%.
 
 ## Project Structure
 

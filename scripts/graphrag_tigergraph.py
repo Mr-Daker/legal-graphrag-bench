@@ -7,6 +7,7 @@ import os
 import re
 import time
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 from urllib import error, parse, request
@@ -24,6 +25,7 @@ DEFAULT_QUERY_NAME = "graphrag_case_context"
 DEFAULT_TOP_CASES = 2
 DEFAULT_CHUNKS_PER_CASE = 5
 DEFAULT_MAX_CONTEXT_TOKENS = 2200
+DEFAULT_FETCH_MULTIPLIER = 5
 
 SYSTEM_PROMPT = """Answer the question using only the graph context.
 If the graph context is insufficient, say that the answer is not available in the graph context.
@@ -58,6 +60,115 @@ STOPWORDS = {
     "with",
 }
 
+GLOBAL_QUERY_MARKERS = {
+    "across",
+    "common",
+    "corpus",
+    "frequent",
+    "frequently",
+    "patterns",
+    "represented",
+    "types",
+}
+
+MULTI_HOP_QUERY_MARKERS = {
+    "affect",
+    "against",
+    "cited",
+    "differently",
+    "distinguish",
+    "influence",
+    "multi",
+    "precedents",
+    "standard",
+    "strickland",
+}
+
+LEGAL_CONCEPT_ALIASES = {
+    "constitutional rights": [
+        "fourth amendment",
+        "fifth amendment",
+        "sixth amendment",
+        "fourteenth amendment",
+        "miranda",
+        "search and seizure",
+        "double jeopardy",
+        "self-incrimination",
+        "right to counsel",
+        "due process",
+        "equal protection",
+    ],
+    "criminal appeal": [
+        "sufficiency of the evidence",
+        "ineffective assistance",
+        "preservation of error",
+        "standard of review",
+        "harmless error",
+    ],
+    "insufficient evidence": [
+        "sufficiency of the evidence",
+        "rational trier",
+        "reasonable doubt",
+        "light most favorable",
+        "substantial evidence",
+    ],
+    "government": [
+        "sovereign immunity",
+        "qualified immunity",
+        "42 u.s.c",
+        "section 1983",
+        "state agency",
+        "due process",
+        "equal protection",
+    ],
+    "civil disputes": [
+        "contract",
+        "tort",
+        "civil rights",
+        "intellectual property",
+        "trademark",
+        "habeas",
+    ],
+    "procedural": [
+        "procedural default",
+        "waiver",
+        "jurisdiction",
+        "untimely",
+        "preserve",
+        "certificate of appealability",
+    ],
+    "direct appeals": [
+        "direct appeal",
+        "post-conviction",
+        "postconviction",
+        "habeas corpus",
+        "collateral attack",
+        "cause and prejudice",
+    ],
+    "standard of review": [
+        "abuse of discretion",
+        "de novo",
+        "clearly erroneous",
+        "substantial evidence",
+        "harmless error",
+    ],
+    "federal circuit": [
+        "court of appeals",
+        "federal circuit",
+        "state appellate",
+        "supreme court precedent",
+        "habeas corpus",
+        "de novo",
+    ],
+    "strickland": [
+        "strickland",
+        "ineffective assistance",
+        "objective standard",
+        "reasonable probability",
+        "counsel",
+    ],
+}
+
 
 @dataclass(frozen=True)
 class GraphContext:
@@ -87,6 +198,7 @@ def read_csv(path: Path) -> list[dict[str, str]]:
         return list(csv.DictReader(handle, delimiter="|", escapechar="\\", quoting=csv.QUOTE_NONE))
 
 
+@lru_cache(maxsize=4)
 def load_local_graph_tables(tigergraph_dir: Path) -> tuple[list[dict[str, str]], dict[str, list[dict[str, Any]]]]:
     cases = read_csv(tigergraph_dir / "legal_cases.csv")
     chunks_by_case: dict[str, list[dict[str, Any]]] = {}
@@ -97,7 +209,77 @@ def load_local_graph_tables(tigergraph_dir: Path) -> tuple[list[dict[str, str]],
 
     for chunks in chunks_by_case.values():
         chunks.sort(key=lambda item: item["chunk_index"])
+
+    for case in cases:
+        chunks = chunks_by_case.get(case["case_id"], [])
+        case_metadata = " ".join(
+            str(case.get(name, ""))
+            for name in ("case_id", "case_name", "citations", "court", "decision_date")
+        )
+        case["_search_text"] = (
+            f"{case_metadata} "
+            f"{' '.join(str(chunk.get('text', '')) for chunk in chunks)}"
+        ).lower()
     return cases, chunks_by_case
+
+
+def query_profile(query: str, question_type: str | None = None) -> str:
+    if question_type in {"local_factual", "global_synthesis", "multi_hop"}:
+        return {
+            "local_factual": "local",
+            "global_synthesis": "global",
+            "multi_hop": "multi_hop",
+        }[question_type]
+    terms = set(query_terms(query))
+    query_lower = query.lower()
+    if terms & MULTI_HOP_QUERY_MARKERS or "how do" in query_lower or "how did" in query_lower:
+        return "multi_hop"
+    if terms & GLOBAL_QUERY_MARKERS:
+        return "global"
+    return "local"
+
+
+def routed_defaults(
+    query: str,
+    top_cases: int,
+    chunks_per_case: int,
+    max_context_tokens: int,
+    question_type: str | None = None,
+) -> tuple[str, int, int, int]:
+    profile = query_profile(query, question_type=question_type)
+    if profile == "global":
+        return profile, max(top_cases, 8), 2, max(max_context_tokens, 2600)
+    if profile == "multi_hop":
+        return profile, max(top_cases, 4), min(max(chunks_per_case, 3), 4), max(max_context_tokens, 2600)
+    return profile, top_cases, chunks_per_case, max_context_tokens
+
+
+def expanded_query_phrases(query: str) -> list[str]:
+    query_lower = query.lower()
+    phrases = []
+    for trigger, aliases in LEGAL_CONCEPT_ALIASES.items():
+        if trigger in query_lower or any(term in query_lower for term in trigger.split()):
+            phrases.extend(aliases)
+    citations = re.findall(r"\b\d+\s+[A-Z][A-Za-z. ]+\s+\d+\b", query)
+    phrases.extend(citation.lower() for citation in citations)
+    return list(dict.fromkeys(phrases))
+
+
+def score_text(query: str, terms: list[str], text: str, *, metadata_weight: float = 1.0) -> float:
+    if not text:
+        return 0.0
+    haystack = text.lower()
+    score = 0.0
+    for term in terms:
+        if term in haystack:
+            score += 1.0
+    for phrase in expanded_query_phrases(query):
+        if phrase in haystack:
+            score += 2.5
+    for name in re.findall(r"\b[A-Z][A-Za-z.']+\s+v\.\s+[A-Z][A-Za-z.']+", query):
+        if name.lower() in haystack:
+            score += 8.0
+    return score * metadata_weight
 
 
 def score_case(query: str, terms: list[str], case: dict[str, str], chunks: list[dict[str, Any]]) -> float:
@@ -108,10 +290,20 @@ def score_case(query: str, terms: list[str], case: dict[str, str], chunks: list[
         str(case.get(name, ""))
         for name in ("case_id", "case_name", "citations", "court", "decision_date")
     ).lower()
-    chunk_text = " ".join(str(chunk.get("text", ""))[:1200] for chunk in chunks[:3]).lower()
-    haystack = f"{case_text} {chunk_text}"
-
-    score = sum(1.0 for term in terms if term in haystack)
+    haystack = str(case.get("_search_text") or case_text)
+    score = score_text(query, terms, case_text, metadata_weight=2.0)
+    score += score_text(query, terms, haystack)
+    if "criminal" in terms or "appeal" in terms:
+        criminal_markers = (
+            "court of criminal appeals",
+            "criminal appeal",
+            "post-conviction",
+            "convicted",
+            "conviction",
+            "defendant",
+            "sentence",
+        )
+        score += min(sum(1 for marker in criminal_markers if marker in haystack), 5) * 1.25
     phrase = query.lower().strip()
     if phrase and phrase in haystack:
         score += 5.0
@@ -268,7 +460,7 @@ def unwrap_vertex(vertex: dict[str, Any]) -> dict[str, Any]:
     return vertex
 
 
-def local_context(case: dict[str, str], tigergraph_dir: Path, chunks_per_case: int) -> GraphContext:
+def local_context(case: dict[str, str], tigergraph_dir: Path, chunks_per_case: int, query: str | None = None) -> GraphContext:
     _, chunks_by_case = load_local_graph_tables(tigergraph_dir)
     citations_by_case: dict[str, list[str]] = {}
     for row in read_csv(tigergraph_dir / "cites.csv"):
@@ -284,14 +476,62 @@ def local_context(case: dict[str, str], tigergraph_dir: Path, chunks_per_case: i
     ]
     return GraphContext(
         case=case,
-        chunks=chunks_by_case.get(case["case_id"], [])[:chunks_per_case],
+        chunks=select_relevant_chunks(query or "", chunks_by_case.get(case["case_id"], []), chunks_per_case),
         citations=citations,
         source="local_csv_fallback",
     )
 
 
+def select_relevant_chunks(query: str, chunks: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+    if limit <= 0 or not chunks:
+        return []
+    terms = query_terms(query)
+    profile = query_profile(query)
+    scored = [
+        (score_text(query, terms, str(chunk.get("text", ""))), chunk)
+        for chunk in chunks
+    ]
+    scored.sort(key=lambda item: (item[0], -int(item[1].get("chunk_index") or 0)), reverse=True)
+
+    selected: list[dict[str, Any]] = []
+    seen: set[str] = set()
+
+    # Case captions and citations usually live at the front of an opinion, so
+    # local factual questions keep that anchor even if another chunk scores higher.
+    if profile == "local":
+        first = min(chunks, key=lambda item: int(item.get("chunk_index") or 0))
+        chunk_id = str(first.get("chunk_id") or first.get("chunk_index"))
+        selected.append(first)
+        seen.add(chunk_id)
+
+    for score, chunk in scored:
+        if score <= 0 and selected:
+            continue
+        chunk_id = str(chunk.get("chunk_id") or chunk.get("chunk_index"))
+        if chunk_id in seen:
+            continue
+        selected.append(chunk)
+        seen.add(chunk_id)
+        if len(selected) >= limit:
+            break
+
+    if len(selected) < limit:
+        for chunk in sorted(chunks, key=lambda item: int(item.get("chunk_index") or 0)):
+            chunk_id = str(chunk.get("chunk_id") or chunk.get("chunk_index"))
+            if chunk_id in seen:
+                continue
+            selected.append(chunk)
+            seen.add(chunk_id)
+            if len(selected) >= limit:
+                break
+
+    selected.sort(key=lambda item: int(item.get("chunk_index") or 0))
+    return selected
+
+
 def graph_context(
     case: dict[str, str],
+    query: str,
     client: TigerGraphClient | None,
     tigergraph_dir: Path,
     query_name: str,
@@ -300,13 +540,14 @@ def graph_context(
 ) -> GraphContext:
     if client is None:
         if allow_local_fallback:
-            return local_context(case, tigergraph_dir, chunks_per_case)
+            return local_context(case, tigergraph_dir, chunks_per_case, query=query)
         raise RuntimeError("TG_HOST is missing. Add TigerGraph connection settings to .env.")
 
     try:
+        fetch_limit = max(chunks_per_case * DEFAULT_FETCH_MULTIPLIER, chunks_per_case, 12)
         payload = client.run_query(
             query_name=query_name,
-            params={"case_id": case["case_id"], "chunk_limit": chunks_per_case},
+            params={"case_id": case["case_id"], "chunk_limit": fetch_limit},
         )
         seed_items = result_items(payload, "seed")
         chunk_items = result_items(payload, "chunks")
@@ -315,10 +556,11 @@ def graph_context(
         chunks = [unwrap_vertex(item) for item in chunk_items]
         citations = [unwrap_vertex(item) for item in cite_items]
         chunks.sort(key=lambda item: int(item.get("chunk_index") or 0))
+        chunks = select_relevant_chunks(query, chunks, chunks_per_case)
         return GraphContext(case=graph_case, chunks=chunks, citations=citations, source="tigergraph")
     except RuntimeError:
         if allow_local_fallback:
-            return local_context(case, tigergraph_dir, chunks_per_case)
+            return local_context(case, tigergraph_dir, chunks_per_case, query=query)
         raise
 
 
@@ -341,6 +583,8 @@ def build_context_block(contexts: list[GraphContext], max_context_tokens: int) -
         header = (
             f"Case: {case.get('case_name') or case.get('case_id')}\n"
             f"Case ID: {case.get('case_id')}\n"
+            f"Court: {case.get('court') or 'unknown'}\n"
+            f"Decision Date: {case.get('decision_date') or 'unknown'}\n"
             f"Citations: {case.get('citations') or citation_text}\n"
         )
         for chunk in context.chunks:
@@ -386,13 +630,22 @@ def answer_query(
     generation_model: str,
     allow_local_fallback: bool,
     context_only: bool = False,
+    question_type: str | None = None,
 ) -> dict[str, Any]:
     started = time.perf_counter()
+    profile, top_cases, chunks_per_case, max_context_tokens = routed_defaults(
+        query=query,
+        top_cases=top_cases,
+        chunks_per_case=chunks_per_case,
+        max_context_tokens=max_context_tokens,
+        question_type=question_type,
+    )
     cases = rank_cases(query=query, tigergraph_dir=tigergraph_dir, top_cases=top_cases)
     client = TigerGraphClient.from_env()
     contexts = [
         graph_context(
             case=case,
+            query=query,
             client=client,
             tigergraph_dir=tigergraph_dir,
             query_name=query_name,
@@ -407,6 +660,7 @@ def answer_query(
             "pipeline": "graphrag",
             "question_id": question_id,
             "question": query,
+            "query_profile": profile,
             "graph_query": query_name,
             "top_cases": top_cases,
             "chunks_per_case": chunks_per_case,
@@ -434,6 +688,7 @@ def answer_query(
         "question": query,
         "answer": result.answer,
         "generation_model": result.model,
+        "query_profile": profile,
         "graph_query": query_name,
         "top_cases": top_cases,
         "chunks_per_case": chunks_per_case,
@@ -478,6 +733,7 @@ def run_questions(
                 generation_model=generation_model,
                 allow_local_fallback=allow_local_fallback,
                 context_only=context_only,
+                question_type=str(item.get("type") or ""),
             )
             handle.write(json.dumps(record, ensure_ascii=False) + "\n")
             records.append(record)
@@ -526,7 +782,7 @@ def main() -> None:
             allow_local_fallback=allow_local_fallback,
             context_only=args.context_only,
         )
-        print(json.dumps(record, indent=2, ensure_ascii=False))
+        print(json.dumps(record, indent=2, ensure_ascii=True))
         return
 
     run_questions(

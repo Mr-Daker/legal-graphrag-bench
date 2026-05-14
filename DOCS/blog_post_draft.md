@@ -64,9 +64,9 @@ Average: **2,354 tokens/query**, **6.9 s/query**
 | ------------ | -----------: | ------------ |
 | LLM-only     |          143 | —            |
 | Basic RAG    |        3,747 | baseline     |
-| **GraphRAG** |    **2,354** | **−37.18%**  |
+| **GraphRAG** |    **2,734** | **−27.04%**   |
 
-This is the clearest win: GraphRAG delivers **37.2% fewer tokens per query** than Basic RAG. Why? The graph traversal surfaces a focused, structured neighborhood of relevant chunks — seed case + citation neighbors + ordered chunks — rather than casting a wide net with similarity search.
+This is a notable win: GraphRAG delivers **27.0% fewer tokens per query** than Basic RAG. Why? The graph traversal surfaces a focused, structured neighborhood of relevant chunks — seed case + citation neighbors + ordered chunks — rather than casting a wide net with similarity search. Note: v4 achieved 37.2% reduction with a simpler retrieval strategy; v5 increased context for global/multi-hop queries (fetching up to 8 cases) to improve answer quality at the cost of some token efficiency.
 
 ### Accuracy: More Nuanced
 
