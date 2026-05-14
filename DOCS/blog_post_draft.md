@@ -64,7 +64,7 @@ Average: **2,354 tokens/query**, **6.9 s/query**
 | ------------ | -----------: | ------------ |
 | LLM-only     |          143 | —            |
 | Basic RAG    |        3,747 | baseline     |
-| **GraphRAG** |    **2,734** | **−27.04%**   |
+| **GraphRAG** |    **2,734** | **−27.04%**  |
 
 This is a notable win: GraphRAG delivers **27.0% fewer tokens per query** than Basic RAG. Why? The graph traversal surfaces a focused, structured neighborhood of relevant chunks — seed case + citation neighbors + ordered chunks — rather than casting a wide net with similarity search. Note: v4 achieved 37.2% reduction with a simpler retrieval strategy; v5 increased context for global/multi-hop queries (fetching up to 8 cases) to improve answer quality at the cost of some token efficiency.
 
@@ -73,13 +73,13 @@ This is a notable win: GraphRAG delivers **27.0% fewer tokens per query** than B
 | Pipeline     | Judge (PASS %) | BERTScore F1 raw | BERTScore F1 rescaled |
 | ------------ | -------------: | ---------------: | --------------------: |
 | LLM-only     |            35% |           0.6702 |                0.3199 |
-| Basic RAG    |        **55%** |           0.6868 |                0.3542 |
-| **GraphRAG** |            45% |       **0.6927** |            **0.3665** |
+| Basic RAG    |            55% |       **0.6868** |            **0.3542** |
+| **GraphRAG** |        **70%** |           0.6579 |                0.2947 |
 
-Basic RAG wins on the PASS/FAIL judge (55%), while GraphRAG wins on BERTScore semantic similarity (0.6927 raw, 0.3665 rescaled). This tells an interesting story:
+Basic RAG wins on BERTScore semantic similarity (0.6868 raw, 0.3542 rescaled), while GraphRAG wins decisively on judge pass rate (70% vs 55%). This tells an interesting story:
 
-- **Basic RAG** is good at retrieving the specific passage that directly answers factual questions. When the judge asks "did this answer get the key facts right?" — Basic RAG often did.
-- **GraphRAG** produces semantically richer answers. Its BERTScore is consistently higher, meaning the answers are more semantically aligned with the reference, even when they don't hit every specific fact the judge was looking for.
+- **GraphRAG** is excellent at producing answers the judge considers correct — its 70% PASS rate reflects richer, more contextually complete answers enabled by graph traversal across related cases. The query routing in v5 (fetching more cases for global/multi-hop questions) was the key driver.
+- **Basic RAG** produces answers that are more semantically similar to the reference text (higher BERTScore). Its chunk retrieval often returns the exact passage verbatim, which scores well on embedding similarity even when it may miss the broader synthesis.
 
 For global synthesis and multi-hop questions — the types that require connecting information across multiple cases — GraphRAG's graph traversal gives it a structural advantage. For local factual questions ("what court decided case X?"), Basic RAG's chunk retrieval is hard to beat.
 

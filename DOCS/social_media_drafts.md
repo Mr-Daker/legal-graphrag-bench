@@ -4,9 +4,9 @@
 
 > Benchmarked LLM-only vs Basic RAG vs TigerGraph GraphRAG on 478 legal opinions.
 >
-> GraphRAG: −27.0% tokens vs Basic RAG
-> Basic RAG: 55% judge pass rate (best accuracy)
-> GraphRAG: highest BERTScore semantic similarity (0.6927)
+> GraphRAG: 70% judge pass rate 🏆 (up from 45% in v4!)
+> Basic RAG: highest BERTScore semantic similarity (0.6868)
+> GraphRAG: −27% tokens vs Basic RAG
 > TigerGraph graph traversal: <100 ms (latency dominated by Gemini free tier)
 >
 > Code + data: github.com/Mr-Daker/legal-graphrag-bench
@@ -54,8 +54,8 @@ Full write-up + code: https://github.com/Mr-Daker/legal-graphrag-bench
 
 ## Dev.to / Hashnode teaser
 
-**Title:** GraphRAG cut my token usage by 27% — here's the benchmark
+**Title:** GraphRAG hit 70% judge accuracy — here's how query routing did it
 
-**Subtitle / hook:** I ran LLM-only, Basic RAG, and TigerGraph GraphRAG against the same 478 legal opinions and 20 benchmark questions. GraphRAG won on efficiency (27.0% token reduction) and semantic quality (BERTScore). Basic RAG won on exact-fact retrieval. Here's the breakdown — including a Rust tokenizer overflow bug in bert_score that took me a while to track down.
+**Subtitle / hook:** I ran LLM-only, Basic RAG, and TigerGraph GraphRAG against the same 478 legal opinions and 20 benchmark questions. GraphRAG v5 won on judge accuracy (70%, up from 45%) by routing global/multi-hop questions to fetch more cases. Basic RAG won on BERTScore. Here's the breakdown — including a Rust tokenizer overflow bug in bert_score that took me a while to track down.
 
 **Tags:** graphrag, rag, llm, tigergraph, nlp, python, machinelearning

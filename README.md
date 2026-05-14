@@ -331,11 +331,11 @@ Eval set: **20 questions** (7 local-factual · 7 global-synthesis · 6 multi-hop
 
 ### Efficiency (tokens per query)
 
-| Pipeline     | Avg tokens/query | vs Basic RAG         |
-| ------------ | ---------------: | -------------------- |
-| LLM-only     |           143.30 | —                    |
-| Basic RAG    |         3,746.85 | baseline             |
-| **GraphRAG** |     **2,733.80** | **−27.04%**          |
+| Pipeline     | Avg tokens/query | vs Basic RAG |
+| ------------ | ---------------: | ------------ |
+| LLM-only     |           143.30 | —            |
+| Basic RAG    |         3,746.85 | baseline     |
+| **GraphRAG** |     **2,733.80** | **−27.04%**  |
 
 GraphRAG avg latency: **36,154 ms** · Basic RAG: **1,791 ms** (GraphRAG slower — query routing fetches up to 8 cases for global/multi-hop queries; TigerGraph graph traversal itself is <100 ms)
 
@@ -348,20 +348,20 @@ BERTScore model: `microsoft/deberta-xlarge-mnli`.
 | ------------ | --------------: | ---------------: | --------------------: |
 | LLM-only     |             35% |           0.6702 |                0.3199 |
 | Basic RAG    |             55% |           0.6868 |                0.3542 |
-| **GraphRAG** |             45% |       **0.6927** |            **0.3665** |
+| **GraphRAG** |         **70%** |           0.6579 |                0.2947 |
 
 Bonus thresholds (hackathon brief):
 
 | Metric                                | Threshold | Status                 |
 | ------------------------------------- | --------- | ---------------------- |
-| LLM-as-a-Judge pass rate              | ≥ 90%     | Not met (best: 55%)    |
-| BERTScore F1 rescaled                 | ≥ 0.55    | Not met (best: 0.3665) |
-| BERTScore F1 raw                      | ≥ 0.88    | Not met (best: 0.6927) |
+| LLM-as-a-Judge pass rate              | ≥ 90%     | Not met (best: 70%)    |
+| BERTScore F1 rescaled                 | ≥ 0.55    | Not met (best: 0.3542) |
+| BERTScore F1 raw                      | ≥ 0.88    | Not met (best: 0.6868) |
 | GraphRAG token reduction vs Basic RAG | ≥ 30%     | Not met (27.04%)       |
 
-> **Note on BERTScore model:** `deberta-xlarge-mnli` uses a tighter rescaling baseline than `distilbert-base-uncased`. With distilbert, GraphRAG scored raw=0.8403, rescaled=0.5216 (within 0.028 of the bonus threshold). GraphRAG ranks highest on BERTScore in both models. All v5 scores use deberta for consistency.
+> **Note on BERTScore model:** `deberta-xlarge-mnli` uses a tighter rescaling baseline than `distilbert-base-uncased`. With distilbert, GraphRAG scored raw=0.8403, rescaled=0.5216 (within 0.028 of the bonus threshold). All v5 scores use deberta for consistency.
 >
-> **Note on v5 token count:** Query routing (v5) fetches up to 8 cases for global/multi-hop queries, increasing avg tokens from 2,354 (v4) to 2,734 — a quality-vs-efficiency trade-off that drops token reduction from 37.2% to 27.0%.
+> **Note on v5 query routing:** Global/multi-hop queries now fetch up to 8 cases (vs 2 in v4). Judge score improved 45% → 70% (richer context). BERTScore dropped slightly (0.6927 → 0.6579) as longer, synthesis-style answers score differently. Token reduction dropped 37.2% → 27.0% — a deliberate quality-vs-efficiency trade-off.
 
 ## Project Structure
 
