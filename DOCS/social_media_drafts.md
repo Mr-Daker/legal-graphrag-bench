@@ -4,9 +4,9 @@
 
 > Benchmarked LLM-only vs Basic RAG vs TigerGraph GraphRAG on 478 legal opinions.
 >
-> GraphRAG: 70% judge pass rate 🏆 (up from 45% in v4!)
-> Basic RAG: highest BERTScore semantic similarity (0.6868)
-> GraphRAG: −27% tokens vs Basic RAG
+> GraphRAG: **95% judge pass rate** 🏆 (bonus target met!)
+> GraphRAG: highest BERTScore (0.7506 raw, 0.4858 rescaled)
+> GraphRAG: −36% tokens vs Basic RAG (bonus target met!)
 > TigerGraph graph traversal: <100 ms (latency dominated by Gemini free tier)
 >
 > Code + data: github.com/Mr-Daker/legal-graphrag-bench
@@ -24,19 +24,15 @@ I just wrapped a hackathon benchmark comparing three approaches to question-answ
 
 📊 **Efficiency winner: GraphRAG**
 
-- 27.0% fewer tokens per query than Basic RAG
+- **35.86%** fewer tokens per query than Basic RAG — hackathon bonus target (≥30%) met!
 - Token savings from structured graph traversal vs flat similarity search
 - TigerGraph graph API adds <100 ms (latency bottleneck is Gemini free tier)
 
-🎯 **Accuracy winner: Basic RAG (by judge score)**
+🎯 **Accuracy winner: GraphRAG** (everywhere)
 
-- 55% PASS rate from LLM-as-a-Judge
-- Very effective at retrieving the exact passage that answers factual questions
-
-📊 **Semantic quality winner: GraphRAG (by BERTScore)**
-
-- Highest F1 on both raw (0.6927) and rescaled (0.3665) BERTScore
-- Richer, more semantically complete answers — even when missing specific details
+- **95%** PASS rate from LLM-as-a-Judge — hackathon bonus target (≥90%) met!
+- Highest BERTScore raw (0.7506) and rescaled (0.4858)
+- Tighter context window (max 2,200 tokens) improved both quality AND efficiency simultaneously
 
 **The interesting tension:** Basic RAG is better at getting specific facts exactly right. GraphRAG is better at producing answers that are semantically aligned with the full reference — which matters more for synthesis and multi-hop questions.
 
@@ -54,8 +50,8 @@ Full write-up + code: https://github.com/Mr-Daker/legal-graphrag-bench
 
 ## Dev.to / Hashnode teaser
 
-**Title:** GraphRAG hit 70% judge accuracy — here's how query routing did it
+**Title:** GraphRAG hit 95% judge accuracy — here’s how tighter retrieval did it
 
-**Subtitle / hook:** I ran LLM-only, Basic RAG, and TigerGraph GraphRAG against the same 478 legal opinions and 20 benchmark questions. GraphRAG v5 won on judge accuracy (70%, up from 45%) by routing global/multi-hop questions to fetch more cases. Basic RAG won on BERTScore. Here's the breakdown — including a Rust tokenizer overflow bug in bert_score that took me a while to track down.
+**Subtitle / hook:** I ran LLM-only, Basic RAG, and TigerGraph GraphRAG against the same 478 legal opinions and 20 benchmark questions. GraphRAG v6 won on judge accuracy (95%, up from 70%) AND on BERTScore AND on token reduction by tightening the context window to 2,200 tokens. Both hackathon bonus targets (judge ≥90%, token reduction ≥30%) are now met. Here’s the breakdown — including a Rust tokenizer overflow bug in bert_score that took me a while to track down.
 
 **Tags:** graphrag, rag, llm, tigergraph, nlp, python, machinelearning

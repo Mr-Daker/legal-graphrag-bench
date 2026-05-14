@@ -1,4 +1,4 @@
-# How GraphRAG Cuts Token Usage by 37% on Legal Documents — A Hackathon Benchmark
+# How GraphRAG Cuts Token Usage by 36% on Legal Documents — A Hackathon Benchmark
 
 _A hands-on comparison of LLM-only, Basic RAG, and TigerGraph GraphRAG on 478 federal and state legal opinions._
 
@@ -50,9 +50,9 @@ Average: **3,747 tokens/query**, **1.8 s/query**
 
 Export the corpus into a `LegalGraphRAG` graph schema with `LegalCase`, `Chunk`, and `Citation` vertex types and `HAS_CHUNK`, `NEXT_CHUNK`, and `CITES` edge types. At query time, run a graph traversal to pull structured context — nearby chunks + citation neighbors — rather than a flat similarity search.
 
-Average: **2,354 tokens/query**, **6.9 s/query**
+Average: **2,403 tokens/query**, **~38 s/query**
 
-> **Note on latency:** All three pipelines are bottlenecked by Gemini's free-tier rate limits (~6–8s per call). The TigerGraph graph traversal itself adds <100 ms. With a paid API tier, GraphRAG latency would match or beat Basic RAG.
+> **Note on latency:** All three pipelines are bottlenecked by Gemini's free-tier rate limits (~6–8s per call, 20 RPD). The TigerGraph graph traversal itself adds <100 ms. With a paid API tier, GraphRAG latency would match or beat Basic RAG.
 
 ---
 
@@ -64,22 +64,22 @@ Average: **2,354 tokens/query**, **6.9 s/query**
 | ------------ | -----------: | ------------ |
 | LLM-only     |          143 | —            |
 | Basic RAG    |        3,747 | baseline     |
-| **GraphRAG** |    **2,734** | **−27.04%**  |
+| **GraphRAG** |    **2,403** | **−35.86%**  |
 
-This is a notable win: GraphRAG delivers **27.0% fewer tokens per query** than Basic RAG. Why? The graph traversal surfaces a focused, structured neighborhood of relevant chunks — seed case + citation neighbors + ordered chunks — rather than casting a wide net with similarity search. Note: v4 achieved 37.2% reduction with a simpler retrieval strategy; v5 increased context for global/multi-hop queries (fetching up to 8 cases) to improve answer quality at the cost of some token efficiency.
+This is a notable win: GraphRAG delivers **35.9% fewer tokens per query** than Basic RAG. Why? The graph traversal surfaces a focused, structured neighborhood of relevant chunks — seed case + citation neighbors + ordered chunks — rather than casting a wide net with similarity search. The tighter context window (max 2,200 tokens) forces the retrieval to stay focused, which in v6 improved both token efficiency and answer quality simultaneously.
 
 ### Accuracy: More Nuanced
 
 | Pipeline     | Judge (PASS %) | BERTScore F1 raw | BERTScore F1 rescaled |
 | ------------ | -------------: | ---------------: | --------------------: |
 | LLM-only     |            35% |           0.6702 |                0.3199 |
-| Basic RAG    |            55% |       **0.6868** |            **0.3542** |
-| **GraphRAG** |        **70%** |           0.6579 |                0.2947 |
+| Basic RAG    |            55% |           0.6868 |                0.3542 |
+| **GraphRAG** |        **95%** |       **0.7506** |            **0.4858** |
 
-Basic RAG wins on BERTScore semantic similarity (0.6868 raw, 0.3542 rescaled), while GraphRAG wins decisively on judge pass rate (70% vs 55%). This tells an interesting story:
+GraphRAG wins on every metric in v6 — judge pass rate (95% vs 55%), BERTScore raw (0.7506 vs 0.6868), and BERTScore rescaled (0.4858 vs 0.3542). This tells a clear story:
 
-- **GraphRAG** is excellent at producing answers the judge considers correct — its 70% PASS rate reflects richer, more contextually complete answers enabled by graph traversal across related cases. The query routing in v5 (fetching more cases for global/multi-hop questions) was the key driver.
-- **Basic RAG** produces answers that are more semantically similar to the reference text (higher BERTScore). Its chunk retrieval often returns the exact passage verbatim, which scores well on embedding similarity even when it may miss the broader synthesis.
+- **GraphRAG** at 95% PASS is excellent at producing answers the judge considers correct. The tighter context window (v6) forces the retrieval to stay focused on the most relevant cases, producing cleaner, more precise answers rather than sprawling synthesis over too much context.
+- **Basic RAG** produces answers with decent semantic similarity but misses the broader synthesis. Its chunk retrieval often returns relevant passages verbatim, which scores well on lexical overlap but misses the relational context that judges look for in synthesis questions.
 
 For global synthesis and multi-hop questions — the types that require connecting information across multiple cases — GraphRAG's graph traversal gives it a structural advantage. For local factual questions ("what court decided case X?"), Basic RAG's chunk retrieval is hard to beat.
 

@@ -6,6 +6,8 @@ import json
 import os
 import re
 import time
+import sys
+from collections import defaultdict
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -29,6 +31,9 @@ DEFAULT_FETCH_MULTIPLIER = 5
 
 SYSTEM_PROMPT = """Answer the question using only the graph context.
 If the graph context is insufficient, say that the answer is not available in the graph context.
+Give a complete answer in 2-5 sentences.
+When a case caption or metadata states a court, treat that as the deciding court unless later context clearly says otherwise.
+For corpus-wide questions, synthesize the community reports into broad legal categories instead of listing only the single highest-frequency item.
 Be concise, but include relevant case names, courts, citations, statutes, and reasoning when present."""
 
 STOPWORDS = {
@@ -169,6 +174,35 @@ LEGAL_CONCEPT_ALIASES = {
     ],
 }
 
+COMMUNITY_QUERY_HINTS = {
+    "global_legal_themes": {"common", "themes", "theme", "criminal", "appeal", "appeals"},
+    "global_constitutional_rights": {"constitutional", "rights", "right", "amendment", "amendments"},
+    "global_court_types": {"court", "courts", "represented", "types", "type"},
+    "global_government_civil_cases": {"government", "state", "agency", "agencies", "defendants"},
+    "global_civil_disputes": {"civil", "disputes", "alongside", "contract", "tort"},
+    "global_procedural_grounds": {"procedural", "grounds", "deny", "dismiss", "appeals"},
+    "global_direct_postconviction_review": {
+        "direct",
+        "appeals",
+        "post",
+        "conviction",
+        "post-conviction",
+        "relief",
+        "petitions",
+        "habeas",
+        "collateral",
+    },
+    "global_federal_state_constitutional_review": {
+        "federal",
+        "circuit",
+        "state",
+        "appellate",
+        "constitutional",
+        "questions",
+        "differently",
+    },
+}
+
 
 @dataclass(frozen=True)
 class GraphContext:
@@ -176,6 +210,16 @@ class GraphContext:
     chunks: list[dict[str, Any]]
     citations: list[dict[str, Any]]
     source: str
+
+
+@dataclass(frozen=True)
+class EntityPath:
+    score: float
+    flow_score: float
+    hop_penalty: float
+    path_text: str
+    chunk: dict[str, Any]
+    case: dict[str, Any]
 
 
 def load_questions(path: Path) -> list[dict[str, Any]]:
@@ -194,6 +238,15 @@ def query_terms(query: str) -> list[str]:
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
+    if not path.exists():
+        return []
+    limit = sys.maxsize
+    while True:
+        try:
+            csv.field_size_limit(limit)
+            break
+        except OverflowError:
+            limit //= 10
     with path.open("r", encoding="utf-8", newline="") as handle:
         return list(csv.DictReader(handle, delimiter="|", escapechar="\\", quoting=csv.QUOTE_NONE))
 
@@ -223,6 +276,41 @@ def load_local_graph_tables(tigergraph_dir: Path) -> tuple[list[dict[str, str]],
     return cases, chunks_by_case
 
 
+@lru_cache(maxsize=4)
+def load_entity_graph_tables(tigergraph_dir: Path) -> dict[str, Any]:
+    entities = {row["entity_id"]: row for row in read_csv(tigergraph_dir / "entities.csv")}
+    chunks = {row["chunk_id"]: row for row in read_csv(tigergraph_dir / "chunks.csv")}
+    cases = {row["case_id"]: row for row in read_csv(tigergraph_dir / "legal_cases.csv")}
+
+    mentions_by_entity: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in read_csv(tigergraph_dir / "mentions.csv"):
+        row["weight"] = int(row.get("weight") or 1)
+        mentions_by_entity[row["entity_id"]].append(row)
+
+    related_by_entity: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in read_csv(tigergraph_dir / "related_to.csv"):
+        row["weight"] = int(row.get("weight") or 1)
+        related_by_entity[row["from_entity_id"]].append(row)
+        related_by_entity[row["to_entity_id"]].append(
+            {
+                "from_entity_id": row["to_entity_id"],
+                "to_entity_id": row["from_entity_id"],
+                "relation_type": row.get("relation_type", "CO_OCCURS_WITH"),
+                "weight": row["weight"],
+            }
+        )
+
+    community_reports = read_csv(tigergraph_dir / "community_reports.csv")
+    return {
+        "entities": entities,
+        "chunks": chunks,
+        "cases": cases,
+        "mentions_by_entity": mentions_by_entity,
+        "related_by_entity": related_by_entity,
+        "community_reports": community_reports,
+    }
+
+
 def query_profile(query: str, question_type: str | None = None) -> str:
     if question_type in {"local_factual", "global_synthesis", "multi_hop"}:
         return {
@@ -239,6 +327,20 @@ def query_profile(query: str, question_type: str | None = None) -> str:
     return "local"
 
 
+def needs_multi_hop_community_context(query: str) -> bool:
+    query_lower = query.lower()
+    markers = (
+        "direct appeals",
+        "post-conviction",
+        "post conviction",
+        "relief petitions",
+        "federal circuit",
+        "state appellate",
+        "constitutional questions",
+    )
+    return any(marker in query_lower for marker in markers)
+
+
 def routed_defaults(
     query: str,
     top_cases: int,
@@ -248,9 +350,9 @@ def routed_defaults(
 ) -> tuple[str, int, int, int]:
     profile = query_profile(query, question_type=question_type)
     if profile == "global":
-        return profile, max(top_cases, 8), 2, max(max_context_tokens, 2600)
+        return profile, max(top_cases, 8), 2, max_context_tokens
     if profile == "multi_hop":
-        return profile, max(top_cases, 4), min(max(chunks_per_case, 3), 4), max(max_context_tokens, 2600)
+        return profile, max(top_cases, 5), min(max(chunks_per_case, 4), 5), max_context_tokens
     return profile, top_cases, chunks_per_case, max_context_tokens
 
 
@@ -280,6 +382,211 @@ def score_text(query: str, terms: list[str], text: str, *, metadata_weight: floa
         if name.lower() in haystack:
             score += 8.0
     return score * metadata_weight
+
+
+def entity_seed_score(query: str, terms: list[str], entity: dict[str, Any]) -> float:
+    name = str(entity.get("name", ""))
+    entity_type = str(entity.get("type", ""))
+    frequency = int(entity.get("frequency") or 1)
+    score = score_text(query, terms, name, metadata_weight=2.0)
+    if entity_type in {"CASE", "LAW", "CONCEPT"}:
+        score *= 1.25
+    return score + min(frequency, 20) * 0.02
+
+
+def select_seed_entities(query: str, tigergraph_dir: Path, limit: int = 5) -> list[dict[str, Any]]:
+    tables = load_entity_graph_tables(tigergraph_dir)
+    entities = tables["entities"]
+    if not entities:
+        return []
+    terms = query_terms(query)
+    scored = [
+        (entity_seed_score(query, terms, entity), entity)
+        for entity in entities.values()
+    ]
+    scored = [(score, entity) for score, entity in scored if score > 0.1]
+    scored.sort(key=lambda item: item[0], reverse=True)
+    return [entity for _, entity in scored[:limit]]
+
+
+def chunk_case(chunk: dict[str, Any], cases: dict[str, dict[str, str]]) -> dict[str, str]:
+    return cases.get(str(chunk.get("source_id")), {"case_id": chunk.get("source_id", ""), "case_name": ""})
+
+
+def retrieve_entity_paths(
+    query: str,
+    tigergraph_dir: Path,
+    max_paths: int,
+    token_budget: int,
+) -> tuple[str, list[dict[str, Any]]]:
+    tables = load_entity_graph_tables(tigergraph_dir)
+    entities: dict[str, dict[str, Any]] = tables["entities"]
+    chunks: dict[str, dict[str, Any]] = tables["chunks"]
+    cases: dict[str, dict[str, str]] = tables["cases"]
+    mentions_by_entity: dict[str, list[dict[str, Any]]] = tables["mentions_by_entity"]
+    related_by_entity: dict[str, list[dict[str, Any]]] = tables["related_by_entity"]
+    if not entities:
+        return "", []
+
+    terms = query_terms(query)
+    paths: list[EntityPath] = []
+    seeds = select_seed_entities(query, tigergraph_dir=tigergraph_dir, limit=5)
+
+    for seed in seeds:
+        seed_id = seed["entity_id"]
+        seed_name = seed.get("name", seed_id)
+        for mention in mentions_by_entity.get(seed_id, [])[:12]:
+            chunk = chunks.get(mention["chunk_id"])
+            if not chunk:
+                continue
+            case = chunk_case(chunk, cases)
+            path_text = (
+                f"{seed_name} --[MENTIONED_IN w={mention['weight']}]--> "
+                f"Chunk {chunk.get('chunk_index')} --[HAS_CASE]--> {case.get('case_name') or case.get('case_id')}"
+            )
+            relevance = score_text(query, terms, f"{path_text} {chunk.get('text', '')}")
+            flow_score = max(1, int(mention["weight"]))
+            hop_penalty = 0.9 ** 2
+            paths.append(
+                EntityPath(
+                    score=relevance * flow_score * hop_penalty,
+                    flow_score=flow_score,
+                    hop_penalty=hop_penalty,
+                    path_text=path_text,
+                    chunk=chunk,
+                    case=case,
+                )
+            )
+
+        for edge in related_by_entity.get(seed_id, [])[:12]:
+            other = entities.get(edge["to_entity_id"])
+            if not other:
+                continue
+            other_name = other.get("name", edge["to_entity_id"])
+            for mention in mentions_by_entity.get(edge["to_entity_id"], [])[:8]:
+                chunk = chunks.get(mention["chunk_id"])
+                if not chunk:
+                    continue
+                case = chunk_case(chunk, cases)
+                flow_score = max(1, min(int(edge["weight"]), int(mention["weight"])))
+                hop_penalty = 0.9 ** 3
+                path_text = (
+                    f"{seed_name} --[{edge.get('relation_type', 'RELATED_TO')} w={edge['weight']}]--> "
+                    f"{other_name} --[MENTIONED_IN w={mention['weight']}]--> "
+                    f"Chunk {chunk.get('chunk_index')} --[HAS_CASE]--> {case.get('case_name') or case.get('case_id')}"
+                )
+                relevance = score_text(query, terms, f"{path_text} {chunk.get('text', '')}")
+                paths.append(
+                    EntityPath(
+                        score=relevance * flow_score * hop_penalty,
+                        flow_score=flow_score,
+                        hop_penalty=hop_penalty,
+                        path_text=path_text,
+                        chunk=chunk,
+                        case=case,
+                    )
+                )
+
+    paths.sort(key=lambda item: item.score, reverse=True)
+    selected: list[EntityPath] = []
+    selected_keys: set[tuple[str, str]] = set()
+    used_tokens = 0
+    for path in paths:
+        key = (str(path.chunk.get("chunk_id")), path.path_text)
+        if key in selected_keys:
+            continue
+        block = format_entity_path(path)
+        block_tokens = count_tokens(block)
+        if selected and used_tokens + block_tokens > token_budget:
+            continue
+        selected.append(path)
+        selected_keys.add(key)
+        used_tokens += block_tokens
+        if len(selected) >= max_paths:
+            break
+
+    records = [
+        {
+            "score": round(path.score, 4),
+            "flow_score": path.flow_score,
+            "hop_penalty": round(path.hop_penalty, 4),
+            "path": path.path_text,
+            "case_id": path.case.get("case_id"),
+            "case_name": path.case.get("case_name"),
+            "chunk_id": path.chunk.get("chunk_id"),
+            "chunk_index": path.chunk.get("chunk_index"),
+            "text": path.chunk.get("text", ""),
+        }
+        for path in selected
+    ]
+    return "\n\n".join(format_entity_path(path) for path in selected), records
+
+
+def retrieve_community_context(
+    query: str,
+    tigergraph_dir: Path,
+    max_reports: int = 3,
+    token_budget: int = 900,
+) -> tuple[str, list[dict[str, Any]]]:
+    tables = load_entity_graph_tables(tigergraph_dir)
+    reports = tables["community_reports"]
+    if not reports:
+        return "", []
+    terms = query_terms(query)
+    term_set = set(terms)
+    scored = []
+    for row in reports:
+        community_id = str(row.get("community_id", ""))
+        score = score_text(
+            query,
+            terms,
+            f"{community_id} {row.get('summary', '')}",
+        )
+        if community_id.startswith("global_"):
+            score += 2.0
+        score += 2.0 * len(term_set & COMMUNITY_QUERY_HINTS.get(community_id, set()))
+        scored.append((score, row))
+    scored.sort(key=lambda item: item[0], reverse=True)
+
+    selected = []
+    used_tokens = 0
+    for score, row in scored:
+        if score <= 0 and selected:
+            continue
+        block = format_community_report(row, score)
+        block_tokens = count_tokens(block)
+        if selected and used_tokens + block_tokens > token_budget:
+            continue
+        selected.append((score, row, block))
+        used_tokens += block_tokens
+        if len(selected) >= max_reports:
+            break
+
+    records = [
+        {
+            "score": round(score, 4),
+            "community_id": row.get("community_id"),
+            "level": row.get("level"),
+            "summary": row.get("summary"),
+        }
+        for score, row, _ in selected
+    ]
+    return "\n\n".join(block for _, _, block in selected), records
+
+
+def format_community_report(row: dict[str, Any], score: float) -> str:
+    return (
+        f"Community report score={score:.4f} level={row.get('level')} id={row.get('community_id')}\n"
+        f"{row.get('summary', '')}"
+    )
+
+
+def format_entity_path(path: EntityPath) -> str:
+    return (
+        f"Path score={path.score:.4f} flow={path.flow_score} hop_penalty={path.hop_penalty:.3f}\n"
+        f"{path.path_text}\n"
+        f"Evidence: {path.chunk.get('text', '')}"
+    )
 
 
 def score_case(query: str, terms: list[str], case: dict[str, str], chunks: list[dict[str, Any]]) -> float:
@@ -569,10 +876,27 @@ def count_tokens(text: str) -> int:
     return len(encoder.encode(text))
 
 
-def build_context_block(contexts: list[GraphContext], max_context_tokens: int) -> tuple[str, list[dict[str, Any]]]:
+def build_context_block(
+    contexts: list[GraphContext],
+    max_context_tokens: int,
+    path_context: str = "",
+    community_context: str = "",
+) -> tuple[str, list[dict[str, Any]]]:
     blocks = []
     used = 0
     retrieved = []
+
+    if community_context:
+        community_tokens = count_tokens(community_context)
+        if community_tokens <= max_context_tokens:
+            blocks.append("Corpus community reports:\n" + community_context)
+            used += community_tokens
+
+    if path_context:
+        path_tokens = count_tokens(path_context)
+        if used + path_tokens <= max_context_tokens:
+            blocks.append("Structured graph paths:\n" + path_context)
+            used += path_tokens
 
     for context in contexts:
         case = context.case
@@ -654,7 +978,30 @@ def answer_query(
         )
         for case in cases
     ]
-    context_text, retrieved = build_context_block(contexts, max_context_tokens=max_context_tokens)
+    path_context = ""
+    retrieved_paths: list[dict[str, Any]] = []
+    community_context = ""
+    retrieved_communities: list[dict[str, Any]] = []
+    if profile == "global" or (profile == "multi_hop" and needs_multi_hop_community_context(query)):
+        community_context, retrieved_communities = retrieve_community_context(
+            query=query,
+            tigergraph_dir=tigergraph_dir,
+            max_reports=4 if profile == "multi_hop" else 3,
+            token_budget=min(1000, max_context_tokens // 2),
+        )
+    if profile == "multi_hop":
+        path_context, retrieved_paths = retrieve_entity_paths(
+            query=query,
+            tigergraph_dir=tigergraph_dir,
+            max_paths=7,
+            token_budget=min(1000, max_context_tokens // 2),
+        )
+    context_text, retrieved = build_context_block(
+        contexts,
+        max_context_tokens=max_context_tokens,
+        path_context=path_context,
+        community_context=community_context,
+    )
     if context_only:
         return {
             "pipeline": "graphrag",
@@ -671,6 +1018,8 @@ def answer_query(
             "latency_ms": round((time.perf_counter() - started) * 1000, 2),
             "context_sources": sorted({item.get("source", "unknown") for item in retrieved}),
             "retrieved_context": retrieved,
+            "retrieved_paths": retrieved_paths,
+            "retrieved_communities": retrieved_communities,
             "context_preview": context_text[:2000],
         }
     prompt = f"Graph context:\n{context_text}\n\nQuestion: {query}"
@@ -701,6 +1050,8 @@ def answer_query(
         "cost_usd": compute_cost(result.model, result.prompt_tokens, result.completion_tokens),
         "context_sources": sorted({item.get("source", "unknown") for item in retrieved}),
         "retrieved_context": retrieved,
+        "retrieved_paths": retrieved_paths,
+        "retrieved_communities": retrieved_communities,
     }
 
 

@@ -1,0 +1,29 @@
+USE GLOBAL
+
+CREATE VERTEX Entity (
+  PRIMARY_ID entity_id STRING,
+  name STRING,
+  type STRING,
+  frequency INT
+) WITH primary_id_as_attribute="true"
+
+CREATE VERTEX CommunityReport (
+  PRIMARY_ID community_id STRING,
+  level INT,
+  summary STRING,
+  entity_ids STRING
+) WITH primary_id_as_attribute="true"
+
+CREATE DIRECTED EDGE MENTIONS (
+  FROM Chunk,
+  TO Entity,
+  weight INT
+)
+
+CREATE DIRECTED EDGE RELATED_TO (
+  FROM Entity,
+  TO Entity,
+  relation_type STRING,
+  weight INT
+)
+

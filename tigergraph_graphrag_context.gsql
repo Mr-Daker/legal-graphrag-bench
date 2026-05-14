@@ -24,3 +24,35 @@ CREATE OR REPLACE DISTRIBUTED QUERY graphrag_case_context(
 }
 
 INSTALL QUERY graphrag_case_context
+
+CREATE OR REPLACE DISTRIBUTED QUERY graphrag_entity_context(
+  STRING keyword,
+  INT entity_limit = 5,
+  INT chunk_limit = 8
+) FOR GRAPH LegalGraphRAG {
+  allEntities = {Entity.*};
+
+  seedEntities = SELECT e
+    FROM allEntities:e
+    WHERE e.name LIKE "%" + keyword + "%"
+    LIMIT entity_limit;
+
+  relatedEntities = SELECT r
+    FROM seedEntities:s -(RELATED_TO:rel)-> Entity:r
+    LIMIT entity_limit;
+
+  chunks = SELECT c
+    FROM seedEntities:s -(<MENTIONS:m)- Chunk:c
+    LIMIT chunk_limit;
+
+  relatedChunks = SELECT c
+    FROM relatedEntities:r -(<MENTIONS:m)- Chunk:c
+    LIMIT chunk_limit;
+
+  PRINT seedEntities;
+  PRINT relatedEntities;
+  PRINT chunks;
+  PRINT relatedChunks;
+}
+
+INSTALL QUERY graphrag_entity_context

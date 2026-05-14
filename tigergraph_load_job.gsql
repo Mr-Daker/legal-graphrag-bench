@@ -7,6 +7,10 @@ CREATE LOADING JOB load_legal_graphrag {
   DEFINE FILENAME has_chunk;
   DEFINE FILENAME next_chunk;
   DEFINE FILENAME cites;
+  DEFINE FILENAME entities;
+  DEFINE FILENAME mentions;
+  DEFINE FILENAME related_to;
+  DEFINE FILENAME community_reports;
 
   LOAD legal_cases TO VERTEX LegalCase VALUES (
     $0,
@@ -42,5 +46,32 @@ CREATE LOADING JOB load_legal_graphrag {
   LOAD cites TO EDGE CITES VALUES (
     $0,
     $1
+  ) USING header="true", separator="|";
+
+  LOAD entities TO VERTEX Entity VALUES (
+    $0,
+    $1,
+    $2,
+    gsql_to_int($3)
+  ) USING header="true", separator="|";
+
+  LOAD mentions TO EDGE MENTIONS VALUES (
+    $0,
+    $1,
+    gsql_to_int($2)
+  ) USING header="true", separator="|";
+
+  LOAD related_to TO EDGE RELATED_TO VALUES (
+    $0,
+    $1,
+    $2,
+    gsql_to_int($3)
+  ) USING header="true", separator="|";
+
+  LOAD community_reports TO VERTEX CommunityReport VALUES (
+    $0,
+    gsql_to_int($1),
+    $2,
+    $3
   ) USING header="true", separator="|";
 }
