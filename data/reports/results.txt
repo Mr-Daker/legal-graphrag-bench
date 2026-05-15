@@ -1,0 +1,214 @@
+==============================================================
+  HACKATHON BENCHMARK RESULTS - GraphRAG Inference Challenge
+  Current full run: v9 bonus-complete LegalGraphRAG
+==============================================================
+
+OFFICIAL TIGERGRAPH GRAPHRAG BASE
+  Built on    : https://github.com/tigergraph/graphrag
+  Commit      : f649f4197f3dc18bf5bd7dd2fb0a0e477a5a70b9
+  Vendored at : vendor/tigergraph-graphrag
+  Adapter     : scripts/tigergraph_graphrag_adapter.py
+  Runtime     : every GraphRAG result includes official_graphrag_base
+  Verification: 20/20 GraphRAG rows include official upstream metadata
+
+LEGALGRAPHRAG CUSTOMIZATION LAYER
+  Legal schema      : LegalCase, Chunk, Citation, Entity, CommunityReport
+  TigerGraph edges  : HAS_CHUNK, NEXT_CHUNK, CITES, MENTIONS, RELATED_TO
+  Routing           : EA-GraphRAG-style local/global/multi-hop router
+  Global retrieval  : CommunityReport retrieval for synthesis questions
+  Path retrieval    : PathRAG-light entity paths
+  Path scoring      : relevance x edge_weight x hop_penalty
+  Generation        : Gemini 2.5 Flash Lite, Gemini-only for final run
+
+--------------------------------------------------------------
+CORPUS
+  Source      : harvard-lil/cold-cases (HuggingFace)
+  Cases       : 478 legal opinions
+  Total tokens: 2,200,374
+  Chunks      : 7,008  (384 tokens / 64 overlap)
+  Eval set    : 20 questions  (7 local_factual | 7 global_synthesis | 6 multi_hop)
+
+--------------------------------------------------------------
+PIPELINE 1 - LLM-Only Baseline
+  Model       : gemini-2.5-flash-lite (rotation available)
+  Questions   : 20
+  Avg tokens  : 143.30
+    Prompt    : 54.65
+    Completion: 88.65
+  Avg latency : 1,326.32 ms
+
+  Per-question tokens and latency:
+  q001:  62 tok | 1,280 ms
+  q002: 246 tok | 2,688 ms
+  q003: 232 tok | 1,447 ms
+  q004:  91 tok |   937 ms
+  q005:  82 tok |   803 ms
+  q006: 107 tok | 1,089 ms
+  q007: 110 tok | 1,355 ms
+  q008:  82 tok |   756 ms
+  q009: 100 tok | 1,977 ms
+  q010: 162 tok | 1,159 ms
+  q011: 114 tok | 1,148 ms
+  q012: 123 tok | 1,074 ms
+  q013: 126 tok | 1,043 ms
+  q014:  73 tok | 1,444 ms
+  q015: 181 tok | 1,135 ms
+  q016: 268 tok | 1,377 ms
+  q017:  76 tok |   779 ms
+  q018: 463 tok | 3,328 ms
+  q019:  80 tok |   902 ms
+  q020:  88 tok |   805 ms
+
+--------------------------------------------------------------
+PIPELINE 2 - Basic RAG
+  Retrieval   : hashing vectors, top-8 chunks
+  Model       : gemini-2.5-flash-lite (rotation available)
+  Questions   : 20
+  Avg tokens  : 3,746.85
+    Prompt    : 3,659.55
+    Completion: 87.30
+  Avg latency : 1,318.00 ms
+
+  Per-question tokens and latency:
+  q001: 3,745 tok | 1,003 ms
+  q002: 3,842 tok | 2,453 ms
+  q003: 3,436 tok | 1,307 ms
+  q004: 3,733 tok |   923 ms
+  q005: 3,651 tok | 1,044 ms
+  q006: 3,674 tok | 1,068 ms
+  q007: 3,709 tok |   973 ms
+  q008: 3,792 tok | 1,074 ms
+  q009: 3,459 tok | 1,020 ms
+  q010: 3,886 tok | 1,406 ms
+  q011: 3,854 tok | 1,101 ms
+  q012: 3,843 tok | 1,087 ms
+  q013: 3,770 tok | 1,060 ms
+  q014: 3,784 tok |   935 ms
+  q015: 3,713 tok | 1,248 ms
+  q016: 3,933 tok | 1,802 ms
+  q017: 3,623 tok |   971 ms
+  q018: 3,934 tok | 2,523 ms
+  q019: 3,744 tok | 1,877 ms
+  q020: 3,812 tok | 1,484 ms
+
+--------------------------------------------------------------
+PIPELINE 3 - GraphRAG
+  Base        : official TigerGraph GraphRAG repo
+  Upstream    : https://github.com/tigergraph/graphrag
+  Commit      : f649f4197f3dc18bf5bd7dd2fb0a0e477a5a70b9
+  Runtime     : TG_FORCE_LOCAL=1 over exported TigerGraph CSV graph
+  Retrieval   : EA router + CommunityReport + PathRAG-light paths
+  Model       : gemini-2.5-flash-lite (Gemini-only final run)
+  Questions   : 20
+  Avg tokens  : 2,375.10
+    Prompt    : 2,323.55
+    Completion: 51.55
+  Avg latency : 1,312.45 ms
+
+  Per-question tokens and latency:
+  q001: 2,174 tok | 1,685 ms
+  q002: 2,173 tok | 1,579 ms
+  q003: 2,255 tok | 1,485 ms
+  q004: 2,173 tok | 1,062 ms
+  q005: 2,549 tok |   871 ms
+  q006: 2,382 tok |   967 ms
+  q007: 2,158 tok |   864 ms
+  q008: 2,342 tok |   805 ms
+  q009: 2,116 tok | 1,010 ms
+  q010: 2,313 tok | 1,703 ms
+  q011: 2,564 tok | 1,073 ms
+  q012: 2,780 tok | 1,177 ms
+  q013: 2,606 tok | 1,226 ms
+  q014: 2,652 tok | 1,256 ms
+  q015: 2,100 tok | 1,117 ms
+  q016: 2,180 tok | 1,043 ms
+  q017: 2,240 tok | 2,936 ms
+  q018: 2,712 tok | 1,206 ms
+  q019: 2,393 tok | 1,305 ms
+  q020: 2,640 tok | 1,879 ms
+
+--------------------------------------------------------------
+ACCURACY EVALUATION - LLM-as-a-Judge + BERTScore
+  Judge model     : gemini-2.5-flash-lite
+  BERTScore model : distilbert-base-uncased
+
+  FINAL RESULTS SUMMARY
+  Pipeline  | Judge | BERT raw | BERT rescaled | Avg tokens | Avg latency
+  --------- | ----- | -------- | ------------- | ---------- | -----------
+  LLM-only  | 35%   | 0.8166   | 0.4507        | 143.30     | 1,326.32 ms
+  Basic RAG | 55%   | 0.8337   | 0.5018        | 3,746.85   | 1,318.00 ms
+  GraphRAG  | 100%  | 0.9003   | 0.7013        | 2,375.10   | 1,312.45 ms
+
+  Judge verdicts:
+  [llm_only]  - 7 PASS / 13 FAIL
+  q001:FAIL q002:PASS q003:PASS q004:FAIL q005:FAIL q006:FAIL
+  q007:FAIL q008:FAIL q009:FAIL q010:PASS q011:FAIL q012:PASS
+  q013:PASS q014:FAIL q015:PASS q016:FAIL q017:FAIL q018:PASS
+  q019:FAIL q020:FAIL
+
+  [basic_rag] - 11 PASS / 9 FAIL
+  q001:PASS q002:PASS q003:FAIL q004:PASS q005:PASS q006:PASS
+  q007:PASS q008:PASS q009:PASS q010:FAIL q011:FAIL q012:FAIL
+  q013:FAIL q014:FAIL q015:FAIL q016:PASS q017:FAIL q018:PASS
+  q019:FAIL q020:PASS
+
+  [graphrag]  - 20 PASS / 0 FAIL
+  q001:PASS q002:PASS q003:PASS q004:PASS q005:PASS q006:PASS
+  q007:PASS q008:PASS q009:PASS q010:PASS q011:PASS q012:PASS
+  q013:PASS q014:PASS q015:PASS q016:PASS q017:PASS q018:PASS
+  q019:PASS q020:PASS
+
+--------------------------------------------------------------
+PER-QUESTION-TYPE JUDGE BREAKDOWN
+  Question type     | Count | LLM-only | Basic RAG | GraphRAG
+  ----------------- | ----- | -------- | --------- | --------
+  Local factual     | 7     | 0/7      | 7/7       | 7/7
+  Global synthesis  | 7     | 4/7      | 2/7       | 7/7
+  Multi-hop         | 6     | 3/6      | 2/6       | 6/6
+
+--------------------------------------------------------------
+BONUS STATUS
+  Metric                                | Target | Result            | Status
+  ------------------------------------- | ------ | ----------------- | ------
+  LLM-as-a-Judge pass rate              | >=90%  | GraphRAG 100%     | MET
+  BERTScore F1 raw                      | >=0.88 | GraphRAG 0.9003   | MET
+  BERTScore F1 rescaled                 | >=0.55 | GraphRAG 0.7013   | MET
+  GraphRAG token reduction vs Basic RAG | >=30%  | 36.61%            | MET
+
+--------------------------------------------------------------
+COMPARISON - GraphRAG vs Basic RAG
+  Basic RAG avg tokens : 3,746.85
+  GraphRAG avg tokens  : 2,375.10
+  Token reduction      : 36.61%
+
+  Basic RAG avg latency: 1,318.00 ms
+  GraphRAG avg latency : 1,312.45 ms
+  Latency reduction    : 0.42%
+
+  Takeaway: GraphRAG matches the official TigerGraph GraphRAG foundation,
+  adds the legal graph retrieval layer, and beats Basic RAG on judge accuracy,
+  BERTScore, token use, and current-run latency.
+
+--------------------------------------------------------------
+HISTORICAL COMPARISON
+  Run | Judge GR | BERT raw | Token reduc. | Key change
+  --- | -------- | -------- | ------------ | ----------
+  v1  | 35%      | 0.8391   | n/a          | baseline
+  v4  | 45%      | 0.6927   | 37.18%       | TigerGraph Savanna API path
+  v6  | 55%      | 0.8285   | 36.92%       | PathRAG-light entity paths
+  v7  | 70%      | 0.8373   | 36.97%       | CommunityReport routing
+  v8  | 90%      | 0.8750   | 36.77%       | optimized synthesis
+  v9  | 100%     | 0.9003   | 36.61%       | official-base metadata + all bonuses met
+
+--------------------------------------------------------------
+OUTPUT FILES
+  data/results/llm_only_results.jsonl
+  data/results/basic_rag_results.jsonl
+  data/results/graphrag_results.jsonl
+  data/reports/pipeline_comparison_report.json
+  data/reports/pipeline_comparison_report.md
+  data/reports/accuracy_report.json
+  data/reports/accuracy_report.md
+  data/reports/results.txt
+
+==============================================================

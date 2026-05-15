@@ -27,8 +27,24 @@ data/index/
 data/results/
 data/reports/
 data/tigergraph/
+!data/reports/
+data/reports/*
+!data/reports/results.txt
+!data/reports/corpus_token_report.json
+!data/reports/chunk_report.json
+!data/reports/tigergraph_export_report.json
+!data/reports/pipeline_comparison_report.json
+!data/reports/pipeline_comparison_report.md
+!data/reports/accuracy_report_final_distilbert.json
+!data/reports/accuracy_report_final_distilbert.md
+!data/reports/accuracy_report_v9_graphrag.json
+!data/reports/accuracy_report_v9_graphrag.md
 
 # --- Node / front-end (vendor graphrag-ui) ---
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+frontend/dist/
 vendor/graphrag/graphrag-ui/node_modules/
 vendor/graphrag/graphrag-ui/.pnpm-store/
 
@@ -43,4 +59,3 @@ Thumbs.db
 .cache/
 .huggingface/
 *.log
-

@@ -1,0 +1,26 @@
+{
+  "input_path": "data\\processed\\chunks.jsonl",
+  "output_dir": "data\\tigergraph",
+  "cases": 478,
+  "chunks": 7008,
+  "citations": 530,
+  "has_chunk_edges": 7008,
+  "next_chunk_edges": 6530,
+  "cites_edges": 530,
+  "entities": 15207,
+  "mentions_edges": 39994,
+  "related_to_edges": 104355,
+  "community_reports": 15,
+  "files": {
+    "legal_cases": "data\\tigergraph\\legal_cases.csv",
+    "chunks": "data\\tigergraph\\chunks.csv",
+    "citations": "data\\tigergraph\\citations.csv",
+    "has_chunk": "data\\tigergraph\\has_chunk.csv",
+    "next_chunk": "data\\tigergraph\\next_chunk.csv",
+    "cites": "data\\tigergraph\\cites.csv",
+    "entities": "data\\tigergraph\\entities.csv",
+    "mentions": "data\\tigergraph\\mentions.csv",
+    "related_to": "data\\tigergraph\\related_to.csv",
+    "community_reports": "data\\tigergraph\\community_reports.csv"
+  }
+}

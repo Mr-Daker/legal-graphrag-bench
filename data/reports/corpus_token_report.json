@@ -1,0 +1,12 @@
+{
+  "dataset_id": "harvard-lil/cold-cases",
+  "split": "train",
+  "output_path": "data\\raw\\cold_cases\\opinions.jsonl",
+  "target_tokens": 2200000,
+  "total_tokens": 2200374,
+  "minimum_required_tokens": 2000000,
+  "meets_round_1_requirement": true,
+  "written_records": 478,
+  "scanned_records": 607,
+  "skipped_records": 129
+}

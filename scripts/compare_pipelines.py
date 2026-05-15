@@ -142,6 +142,23 @@ def build_report(questions_path: Path, results: dict[str, Path]) -> dict[str, An
             2,
         )
 
+    graph_rows = rows_by_pipeline.get("graphrag", [])
+    official_rows = [
+        row.get("official_graphrag_base")
+        for row in graph_rows
+        if isinstance(row.get("official_graphrag_base"), dict)
+    ]
+    official_base = official_rows[0] if official_rows else {}
+    official_metadata = {
+        "built_on": official_base.get("upstream"),
+        "commit": official_base.get("commit"),
+        "available": official_base.get("available"),
+        "customization": official_base.get("customization"),
+        "rows_with_metadata": len(official_rows),
+        "total_graphrag_rows": len(graph_rows),
+        "all_rows_include_metadata": bool(graph_rows) and len(official_rows) == len(graph_rows),
+    }
+
     per_question = defaultdict(dict)
     for pipeline, rows in rows_by_pipeline.items():
         for row in rows:
@@ -159,6 +176,7 @@ def build_report(questions_path: Path, results: dict[str, Path]) -> dict[str, An
     return {
         "questions_path": str(questions_path),
         "result_files": {name: str(path) for name, path in results.items()},
+        "official_graphrag_base": official_metadata,
         "summaries": summaries,
         "comparisons": comparisons,
         "per_question": dict(sorted(per_question.items())),
@@ -187,6 +205,19 @@ def markdown_table(report: dict[str, Any]) -> str:
                 pass_rate=summary["heuristic_pass_rate"],
             )
         )
+
+    official = report.get("official_graphrag_base", {})
+    if official.get("built_on"):
+        lines.append("")
+        lines.append("## Official TigerGraph GraphRAG Base")
+        lines.append("")
+        lines.append(f"- Built on: `{official.get('built_on')}`")
+        lines.append(f"- Commit: `{official.get('commit')}`")
+        lines.append(
+            f"- Metadata coverage: `{official.get('rows_with_metadata')}/{official.get('total_graphrag_rows')}` GraphRAG rows"
+        )
+        lines.append(f"- All rows include metadata: `{official.get('all_rows_include_metadata')}`")
+        lines.append(f"- Customization: {official.get('customization')}")
 
     lines.append("")
     lines.append("## GraphRAG vs Basic RAG")
@@ -275,6 +306,7 @@ def markdown_accuracy_section(report: dict[str, Any]) -> str:
             f" | {_bonus(s.get('bonus_bertscore_rescaled_met'))}"
             " |"
         )
+    lines.append("")
     lines.append("")
     return "\n".join(lines)
 

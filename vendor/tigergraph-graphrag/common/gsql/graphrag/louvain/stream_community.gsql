@@ -1,0 +1,8 @@
+CREATE OR REPLACE DISTRIBUTED QUERY stream_community(UINT iter) {
+    Comms = {Community.*};
+
+    Comms = SELECT s FROM Comms:s
+               WHERE s.iteration == iter;
+
+    PRINT Comms[Comms.id];
+}

@@ -133,6 +133,7 @@ def generate_text(
     temperature: float = 0.0,
     max_attempts: int = 3,
     provider: str | None = None,
+    max_output_tokens: int | None = None,
 ) -> GeminiResult:
     load_dotenv()
     llm_provider = selected_provider(model=model, provider=provider)
@@ -152,6 +153,7 @@ def generate_text(
                 model=provider_model(llm_provider, candidate),
                 temperature=temperature,
                 max_attempts=max_attempts,
+                max_output_tokens=max_output_tokens,
             )
         except Exception as exc:
             if _is_daily_quota_error(exc):
@@ -169,6 +171,7 @@ def generate_text(
                 model=provider_model(fallback, candidate),
                 temperature=temperature,
                 max_attempts=max_attempts,
+                max_output_tokens=max_output_tokens,
             )
 
     # All rotation candidates exhausted — last resort: provider fallback.
@@ -181,6 +184,7 @@ def generate_text(
             model=provider_model(fallback, model),
             temperature=temperature,
             max_attempts=max_attempts,
+            max_output_tokens=max_output_tokens,
         )
     raise last_exc or RuntimeError("All Gemini model rotation candidates exhausted.")
 
@@ -192,6 +196,7 @@ def generate_text_once(
     model: str,
     temperature: float,
     max_attempts: int,
+    max_output_tokens: int | None = None,
 ) -> GeminiResult:
     if provider == "xai":
         return generate_xai_text(
@@ -200,6 +205,7 @@ def generate_text_once(
             model=model,
             temperature=temperature,
             max_attempts=max_attempts,
+            max_output_tokens=max_output_tokens,
         )
 
     started = time.perf_counter()
@@ -213,6 +219,7 @@ def generate_text_once(
                 config=types.GenerateContentConfig(
                     temperature=temperature,
                     system_instruction=system_instruction,
+                    max_output_tokens=max_output_tokens,
                 ),
             )
             break
@@ -250,6 +257,7 @@ def generate_xai_text(
     model: str = DEFAULT_XAI_MODEL,
     temperature: float = 0.0,
     max_attempts: int = 3,
+    max_output_tokens: int | None = None,
 ) -> GeminiResult:
     api_key = os.getenv("XAI_API_KEY")
     if not api_key:
@@ -265,6 +273,8 @@ def generate_xai_text(
         "temperature": temperature,
         "stream": False,
     }
+    if max_output_tokens is not None:
+        payload["max_tokens"] = max_output_tokens
     data = json.dumps(payload).encode("utf-8")
     last_error: Exception | None = None
     for attempt in range(1, max_attempts + 1):

@@ -1,0 +1,12 @@
+{
+  "input_path": "data\\raw\\cold_cases\\opinions.jsonl",
+  "output_path": "data\\processed\\chunks.jsonl",
+  "documents": 478,
+  "chunks": 7008,
+  "chunk_size": 384,
+  "chunk_overlap": 64,
+  "input_tokens": 2200374,
+  "chunked_tokens_including_overlap": 2618294,
+  "minimum_required_tokens": 2000000,
+  "meets_round_1_requirement": true
+}

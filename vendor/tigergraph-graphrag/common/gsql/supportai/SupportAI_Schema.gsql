@@ -1,0 +1,42 @@
+/*
+ * Copyright (c) 2024-2026 TigerGraph, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+CREATE SCHEMA_CHANGE JOB add_supportai_schema {
+    ADD VERTEX DocumentChunk(PRIMARY_ID id STRING, idx INT, epoch_added UINT, epoch_processing UINT, epoch_processed UINT) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="true";
+    ADD VERTEX Document(PRIMARY_ID id STRING, epoch_added UINT, epoch_processing UINT, epoch_processed UINT) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="true";
+    ADD VERTEX Entity(PRIMARY_ID id STRING, definition STRING, description SET<STRING>, entity_type STRING, epoch_added UINT, epoch_processing UINT, epoch_processed UINT) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="true";
+    ADD VERTEX RelationshipType(PRIMARY_ID id STRING, definition STRING, short_name STRING, epoch_added UINT, epoch_processing UINT, epoch_processed UINT) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="true";
+    ADD VERTEX Content(PRIMARY_ID id STRING, ctype STRING, text STRING, epoch_added UINT) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="true";
+    ADD VERTEX EntityType(PRIMARY_ID id STRING, description STRING, epoch_added UINT) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="true";
+    ADD DIRECTED EDGE HAS_CONTENT(FROM Document, TO Content|FROM DocumentChunk, TO Content) WITH REVERSE_EDGE="reverse_HAS_CONTENT";
+    ADD DIRECTED EDGE IS_HEAD_OF(FROM Entity, TO RelationshipType) WITH REVERSE_EDGE="reverse_IS_HEAD_OF";
+    ADD DIRECTED EDGE HAS_TAIL(FROM RelationshipType, TO Entity) WITH REVERSE_EDGE="reverse_HAS_TAIL";
+    ADD DIRECTED EDGE CONTAINS_ENTITY(FROM DocumentChunk, TO Entity|FROM Document, TO Entity) WITH REVERSE_EDGE="reverse_CONTAINS_ENTITY";
+    ADD DIRECTED EDGE MENTIONS_RELATIONSHIP(FROM DocumentChunk, TO RelationshipType|FROM Document, TO RelationshipType) WITH REVERSE_EDGE="reverse_MENTIONS_RELATIONSHIP";
+    ADD DIRECTED EDGE IS_AFTER(FROM DocumentChunk, TO DocumentChunk) WITH REVERSE_EDGE="reverse_IS_AFTER";
+    ADD DIRECTED EDGE HAS_CHILD(FROM Document, TO DocumentChunk) WITH REVERSE_EDGE="reverse_HAS_CHILD";
+    ADD DIRECTED EDGE ENTITY_HAS_TYPE(FROM Entity, TO EntityType) WITH REVERSE_EDGE="reverse_ENTITY_HAS_TYPE";
+    ADD DIRECTED EDGE RELATIONSHIP_TYPE(FROM EntityType, TO EntityType, DISCRIMINATOR(relation_type STRING), frequency INT) WITH REVERSE_EDGE="reverse_RELATIONSHIP_TYPE";
+
+    // GraphRAG
+    ADD VERTEX Community (PRIMARY_ID id STRING, iteration UINT, description STRING) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="true";
+
+    ADD DIRECTED EDGE RELATIONSHIP(FROM Entity, TO Entity, relation_type STRING) WITH REVERSE_EDGE="reverse_RELATIONSHIP";
+
+    ADD DIRECTED EDGE IN_COMMUNITY(FROM Entity, TO Community) WITH REVERSE_EDGE="reverse_IN_COMMUNITY";
+    ADD DIRECTED EDGE LINKS_TO (from Community, to Community, weight DOUBLE) WITH REVERSE_EDGE="reverse_LINKS_TO";
+    ADD DIRECTED EDGE HAS_PARENT (from Community, to Community) WITH REVERSE_EDGE="reverse_HAS_PARENT";
+}

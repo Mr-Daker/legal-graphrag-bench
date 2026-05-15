@@ -1,0 +1,492 @@
+# Copyright (c) 2024-2026 TigerGraph, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import asyncio
+import base64
+import logging
+import time
+import json
+from urllib.parse import quote_plus
+from typing import Iterable, List, Optional, Tuple
+
+import ecc_util
+import httpx
+from aiochannel import Channel
+from graphrag import community_summarizer, util
+from langchain_community.graphs.graph_document import GraphDocument, Node
+from pyTigerGraph import AsyncTigerGraphConnection
+
+from common.embeddings.embedding_services import EmbeddingModel
+from common.embeddings.base_embedding_store import EmbeddingStore
+from common.extractors import BaseExtractor, LLMEntityRelationshipExtractor
+from common.logs.logwriter import LogWriter
+
+logger = logging.getLogger(__name__)
+
+async def install_query(
+    conn: AsyncTigerGraphConnection, query_path: str, install: bool = True
+) -> dict[str, httpx.Response | str | None]:
+    LogWriter.info(f"Installing query {query_path}")
+    with open(f"{query_path}.gsql", "r") as f:
+        query = f.read()
+
+    query_name = query_path.split("/")[-1]
+    query = f"""\
+USE GRAPH {conn.graphname}
+{query}
+"""
+    if install:
+       query += f"""
+INSTALL QUERY {query_name}
+"""
+    async with util.tg_sem:
+        res = await conn.gsql(query)
+
+    res_lower = res.lower() if isinstance(res, str) else ""
+    if "error" in res_lower or "does not exist" in res_lower or "failed" in res_lower:
+        LogWriter.error(res)
+        return {
+            "result": None,
+            "error": True,
+            "message": f"Failed to install query {query_name}",
+        }
+
+    return {"result": res, "error": False}
+
+
+chunk_sem = asyncio.Semaphore(util._worker_concurrency)
+
+
+async def chunk_doc(
+    conn: AsyncTigerGraphConnection,
+    doc: dict[str, str],
+    upsert_chan: Channel,
+    embed_chan: Channel,
+    extract_chan: Channel,
+):
+    """
+    Chunks a document.
+    Places the resulting chunks into the upsert channel (to be upserted to TG)
+    and the embed channel (to be embedded and written to the vector store)
+    """
+
+    # if loader is running, wait until it's done
+    if not util.loading_event.is_set():
+        logger.info("Chunk worker waiting for loading event to finish")
+        await util.loading_event.wait()
+
+    async with chunk_sem:
+        if "ctype" in doc["attributes"]:
+            chunker_type = doc["attributes"]["ctype"].lower().strip()
+        else:
+            chunker_type = ""
+        
+        v_id = util.process_id(doc["v_id"])
+        if v_id != doc["v_id"]:
+            logger.info(f"""Cloning doc/content {doc["v_id"]} -> {v_id}""")
+            await upsert_chan.put((upsert_doc, (conn, v_id, chunker_type, doc["attributes"]["text"])))
+        
+        # Use get_chunker for all types (including images)
+        # For images, get_chunker returns SingleChunker which preserves markdown image references
+        chunker = ecc_util.get_chunker(chunker_type, graphname=conn.graphname)
+        # decode the text return from tigergraph as it was encoded when written into jsonl file for uploading
+        chunks = chunker.chunk(doc["attributes"]["text"].encode('raw_unicode_escape').decode('unicode_escape'))
+       
+        logger.info(f"Chunking {v_id} into {len(chunks)} chunk(s)")
+        for i, chunk in enumerate(chunks):
+            chunk_id = f"{v_id}_chunk_{i}"
+            logger.info(f"Processing chunk {chunk_id}")
+
+            # send chunks to be upserted (func, args)
+            logger.info("chunk writes to upsert_chan")
+            await upsert_chan.put((upsert_chunk, (conn, v_id, chunk_id, chunk)))
+
+            # send chunks to have entities extracted
+            logger.info("chunk writes to extract_chan")
+            await extract_chan.put((chunk, chunk_id))
+
+            # send chunks to be embedded
+            logger.info("chunk writes to embed_chan")
+            await embed_chan.put((chunk_id, chunk, "DocumentChunk"))
+
+    return v_id
+
+
+async def upsert_doc(conn: AsyncTigerGraphConnection, doc_id, ctype, content_text):
+    date_added = int(time.time())
+    await util.upsert_vertex(
+        conn,
+        "Document",
+        doc_id,
+        attributes={"epoch_added": date_added, "epoch_processed": date_added},
+    )
+    await util.upsert_vertex(
+        conn,
+        "Content",
+        doc_id,
+        attributes={"ctype": ctype, "text": content_text, "epoch_added": date_added},
+    )
+    await util.upsert_edge(
+        conn, "Document", doc_id, "HAS_CONTENT", "Content", doc_id
+    )
+
+async def upsert_chunk(conn: AsyncTigerGraphConnection, doc_id, chunk_id, chunk):
+    logger.info(f"Upserting chunk {chunk_id}")
+    date_added = int(time.time())
+    await util.upsert_vertex(
+        conn,
+        "DocumentChunk",
+        chunk_id,
+        attributes={"epoch_added": date_added, "epoch_processed": date_added, "idx": int(chunk_id.split("_")[-1])},
+    )
+    await util.upsert_vertex(
+        conn,
+        "Content",
+        chunk_id,
+        attributes={"text": chunk, "epoch_added": date_added},
+    )
+    await util.upsert_edge(
+        conn, "DocumentChunk", chunk_id, "HAS_CONTENT", "Content", chunk_id
+    )
+    await util.upsert_edge(
+        conn, "Document", doc_id, "HAS_CHILD", "DocumentChunk", chunk_id
+    )
+    if int(chunk_id.split("_")[-1]) > 0:
+        await util.upsert_edge(
+            conn,
+            "DocumentChunk",
+            chunk_id,
+            "IS_AFTER",
+            "DocumentChunk",
+            doc_id + "_chunk_" + str(int(chunk_id.split("_")[-1]) - 1),
+        )
+
+
+embed_sem = asyncio.Semaphore(util._worker_concurrency)
+
+
+async def embed(
+    embed_svc: EmbeddingModel,
+    embed_store: EmbeddingStore,
+    v_id: str | Tuple[str, str],
+    content: str,
+):
+    """
+    Args:
+        graphname: str
+            the name of the graph the documents are in
+        embed_svc: EmbeddingModel
+            The class used to vectorize text
+        embed_store:
+            The class used to store the vectore to a vector DB
+        v_id: str
+            the vertex id that will be embedded
+        content: str
+            the content of the document/chunk
+        index_name: str
+            the vertex index to write to
+    """
+    async with embed_sem:
+        logger.info(f"Embedding {v_id}")
+
+        # if loader is running, wait until it's done
+        if not util.loading_event.is_set():
+            logger.info("Embed worker waiting for loading event to finish")
+            await util.loading_event.wait()
+        try:
+            await embed_store.aadd_embeddings([(content, [])], [{"vertex_id": v_id}])
+        except Exception as e:
+            logger.error(f"Failed to add embeddings for {v_id}: {e}")
+
+
+def _is_near_duplicate(new_desc, existing_descs, threshold=0.85):
+    from difflib import SequenceMatcher
+    new_lower = new_desc.lower()
+    new_len = len(new_lower)
+    sm = SequenceMatcher(None, new_lower)
+    for existing in existing_descs:
+        ex_lower = existing.lower()
+        ex_len = len(ex_lower)
+        if not (new_len + ex_len) or 2 * min(new_len, ex_len) / (new_len + ex_len) < threshold:
+            continue
+        sm.set_seq2(ex_lower)
+        if sm.quick_ratio() >= threshold and sm.ratio() >= threshold:
+            return True
+    return False
+
+
+async def get_vert_desc(conn, v_id, node: Node):
+    new_desc = node.properties.get("description", "")
+    exists = await util.check_vertex_exists(conn, v_id)
+    if not exists.get("error", False):
+        resp = exists.get("resp")
+        if resp and len(resp) > 0 and "attributes" in resp[0]:
+            existing_descs = resp[0]["attributes"].get("description", [])
+            if not new_desc or _is_near_duplicate(new_desc, existing_descs):
+                return existing_descs if existing_descs else [new_desc]
+            return existing_descs + [new_desc]
+    return [new_desc]
+
+
+extract_sem = asyncio.Semaphore(util._worker_concurrency)
+
+
+async def extract(
+    upsert_chan: Channel,
+    extractor: BaseExtractor,
+    conn: AsyncTigerGraphConnection,
+    chunk: str,
+    chunk_id: str,
+):
+    # if loader is running, wait until it's done
+    if not util.loading_event.is_set():
+        logger.info("Extract worker waiting for loading event to finish")
+        await util.loading_event.wait()
+
+    async with extract_sem:
+        try:
+            extracted: list[GraphDocument] = await extractor.aextract(chunk)
+            logger.info(
+                f"Extracting chunk: {chunk_id} ({len(extracted)} graph docs extracted)"
+            )
+        except Exception as e:
+            logger.error(f"Failed to extract chunk {chunk_id}: {e}")
+            extracted = []
+
+        # upsert nodes and edges to the graph
+        for doc in extracted:
+            for i, node in enumerate(doc.nodes):
+                logger.info(f"extract writes entity vert to upsert\nNode: {node.id}")
+                v_id = util.process_id(str(node.id))
+                if len(v_id) == 0:
+                    continue
+                desc = await get_vert_desc(conn, v_id, node)
+
+                if len(desc[0]) == 0:
+                    desc[0] = str(node.id)
+
+                await upsert_chan.put(
+                    (
+                        util.upsert_vertex,  # func to call
+                        (
+                            conn,
+                            "Entity",  # v_type
+                            v_id,  # v_id
+                            {  # attrs
+                                "description": desc,
+                                "epoch_added": int(time.time()),
+                            },
+                        ),
+                    )
+                )
+                if isinstance(extractor, LLMEntityRelationshipExtractor):
+                    logger.info("extract writes type vert to upsert")
+                    type_id = util.process_id(node.type)
+                    if len(type_id) == 0:
+                        continue
+                    await upsert_chan.put(
+                        (
+                            util.upsert_vertex,  # func to call
+                            (
+                                conn,
+                                "EntityType",  # v_type
+                                type_id,  # v_id
+                                {  # attrs
+                                    "epoch_added": int(time.time()),
+                                },
+                            )
+                        )
+                    )
+                    logger.info("extract writes entity_has_type edge to upsert")
+                    await upsert_chan.put(
+                        (
+                            util.upsert_edge,
+                            (
+                                conn,
+                                "Entity",  # src_type
+                                v_id,  # src_id
+                                "ENTITY_HAS_TYPE",  # edgeType
+                                "EntityType",  # tgt_type
+                                type_id,  # tgt_id
+                                None,  # attributes
+                            ),
+                        )
+                    )
+
+                # link the entity to the chunk it came from
+                logger.info("extract writes contains edge to upsert")
+                await upsert_chan.put(
+                    (
+                        util.upsert_edge,
+                        (
+                            conn,
+                            "DocumentChunk",  # src_type
+                            chunk_id,  # src_id
+                            "CONTAINS_ENTITY",  # edge_type
+                            "Entity",  # tgt_type
+                            v_id,  # tgt_id
+                            None,  # attributes
+                        ),
+                    )
+                )
+                for node2 in doc.nodes[i + 1:]:
+                    v_id2 = util.process_id(str(node2.id))
+                    if len(v_id2) == 0:
+                        continue
+                    await upsert_chan.put(
+                    (
+                        util.upsert_edge,
+                        (
+                            conn,
+                            "Entity",  # src_type
+                            v_id,  # src_id
+                            "RELATIONSHIP",  # edgeType
+                            "Entity",  # tgt_type
+                            v_id2,  # tgt_id
+                            {"relation_type": "DOC_CHUNK_COOCCURRENCE"},  # attributes
+                        ),
+                    )
+                )
+
+            for edge in doc.relationships:
+                logger.info(
+                    f"extract writes relates edge to upsert:{edge.source.id} -({edge.type})->  {edge.target.id}"
+                )
+                # upsert verts first to make sure their ID becomes an attr
+                v_id = util.process_id(edge.source.id)  # src_id
+                if len(v_id) == 0:
+                    continue
+                desc = await get_vert_desc(conn, v_id, edge.source)
+                if len(desc[0]) == 0:
+                    desc[0] = edge.source.id
+                await upsert_chan.put(
+                    (
+                        util.upsert_vertex,  # func to call
+                        (
+                            conn,
+                            "Entity",  # v_type
+                            v_id,
+                            {  # attrs
+                                "description": desc,
+                                "epoch_added": int(time.time()),
+                            },
+                        ),
+                    )
+                )
+                v_id = util.process_id(edge.target.id)
+                if len(v_id) == 0:
+                    continue
+                desc = await get_vert_desc(conn, v_id, edge.target)
+                if len(desc[0]) == 0:
+                    desc[0] = edge.target.id
+                await upsert_chan.put(
+                    (
+                        util.upsert_vertex,  # func to call
+                        (
+                            conn,
+                            "Entity",  # v_type
+                            v_id,  # src_id
+                            {  # attrs
+                                "description": desc,
+                                "epoch_added": int(time.time()),
+                            },
+                        ),
+                    )
+                )
+
+                # upsert the edge between the two entities
+                await upsert_chan.put(
+                    (
+                        util.upsert_edge,
+                        (
+                            conn,
+                            "Entity",  # src_type
+                            util.process_id(edge.source.id),  # src_id
+                            "RELATIONSHIP",  # edgeType
+                            "Entity",  # tgt_type
+                            util.process_id(edge.target.id),  # tgt_id
+                            {"relation_type": edge.type},  # attributes
+                        ),
+                    )
+                )
+                # embed "RelationshipType",
+                # (v_id, content, index_name)
+                # right now, we're not embedding relationships in graphrag
+
+
+comm_sem = asyncio.Semaphore(util._worker_concurrency)
+
+
+async def process_community(
+    conn: AsyncTigerGraphConnection,
+    upsert_chan: Channel,
+    embed_chan: Channel,
+    i: int,
+    comm_id: str,
+):
+    """
+    https://github.com/microsoft/graphrag/blob/main/graphrag/prompt_tune/template/community_report_summarization.py
+
+    Get children verts (Entity for layer-1 Communities, Community otherwise)
+    if the commuinty only has one child, use its description -- no need to summarize
+
+    embed summaries
+    """
+    # if loader is running, wait until it's done
+    if not util.loading_event.is_set():
+        logger.info("Process Community worker waiting for loading event to finish")
+        await util.loading_event.wait()
+
+    async with comm_sem:
+        logger.info(f"Processing Community: {comm_id}")
+        # get the children of the community
+        children = await util.get_commuinty_children(conn, i, comm_id)
+        comm_id = util.process_id(comm_id)
+        err = False
+
+        # if the community only has one child, use its description
+        if len(children) == 1:
+            summary = children[0]
+        else:
+            from common.config import get_llm_service, get_completion_config
+            llm = get_llm_service(get_completion_config(conn.graphname))
+            summarizer = community_summarizer.CommunitySummarizer(llm)
+            summary = await summarizer.summarize(comm_id, children)
+            if summary["error"]:
+                summary = await summarizer.summarize(comm_id, children)
+                if summary["error"]:
+                    logger.error(f"Failed to summarize community {comm_id} with message {summary['message']}")
+                summary = "Should ignore due to summary error."
+            else:
+                summary = summary["summary"]
+
+        if not err:
+            logger.debug(f"Community {comm_id}: {children}, {summary}")
+            await upsert_chan.put(
+                (
+                    util.upsert_vertex,  # func to call
+                    (
+                        conn,
+                        "Community",  # v_type
+                        comm_id,  # v_id
+                        {  # attrs
+                            "description": summary,
+                            "iteration": i,
+                        },
+                    ),
+                )
+            )
+
+            # (v_id, content, index_name)
+            await embed_chan.put((comm_id, summary, "Community"))

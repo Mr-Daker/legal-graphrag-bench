@@ -1,0 +1,12 @@
+Upstream: https://github.com/tigergraph/graphrag
+Commit: f649f4197f3dc18bf5bd7dd2fb0a0e477a5a70b9
+
+This repository is vendored as the official TigerGraph GraphRAG foundation required by
+the hackathon brief. The project-specific LegalGraphRAG implementation in the root
+repository customizes it with:
+
+- a legal-opinion schema for LegalCase, Chunk, Citation, Entity, and CommunityReport
+- MENTIONS and RELATED_TO entity edges exported for TigerGraph
+- EA-GraphRAG-style query routing
+- PathRAG-light path scoring and pruning
+- Gemini generation, benchmarking, and the React/Node dashboard

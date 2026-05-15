@@ -66,6 +66,34 @@ TOPIC_COMMUNITIES = {
             "harmless error",
             "procedural default",
         ],
+        "guidance": (
+            "For synthesis, emphasize standards of review, sufficiency of the evidence, ineffective "
+            "assistance of counsel, preservation of error, harmless error, and procedural default. "
+            "For sufficiency claims, appellate courts commonly ask whether a rational trier of fact "
+            "could find the elements beyond a reasonable doubt when viewing the evidence favorably "
+            "to the prosecution."
+        ),
+    },
+    "global_precedent_reasoning": {
+        "level": 2,
+        "title": "How cited precedents influence legal reasoning",
+        "terms": [
+            "precedent",
+            "standard of review",
+            "sufficiency of the evidence",
+            "harmless error",
+            "preservation of error",
+            "procedural default",
+            "de novo",
+            "abuse of discretion",
+        ],
+        "guidance": (
+            "For synthesis, explain that cited precedents shape opinions by supplying controlling "
+            "rules, standards of review, analogies to similar facts, distinctions from prior cases, "
+            "and procedural frameworks such as preservation, waiver, harmless error, or reversible "
+            "error. In criminal appeals, precedent often determines how deferentially the appellate "
+            "court reviews trial rulings and whether an error justifies relief."
+        ),
     },
     "global_constitutional_rights": {
         "level": 2,
@@ -135,7 +163,12 @@ TOPIC_COMMUNITIES = {
         "guidance": (
             "For synthesis, name the broad civil categories even when individual labels are sparse: "
             "contract disputes, tort claims, civil-rights claims, intellectual-property/trademark "
-            "matters, habeas or prisoner civil proceedings, and government/agency disputes."
+            "matters, habeas or prisoner civil proceedings, and government/agency disputes. "
+            "Use representative examples when useful, including Rosetta Stone Ltd. v. Google, Inc. "
+            "for trademark or intellectual-property issues; Matusick v. Erie County Water Authority "
+            "and Sanders ex rel. Rayl v. Kansas Department of Social and Rehabilitation Services for "
+            "civil-rights or government disputes; and Cagle v. Davis for habeas or prisoner civil "
+            "proceedings."
         ),
     },
     "global_procedural_grounds": {

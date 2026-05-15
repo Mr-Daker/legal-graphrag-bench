@@ -1,0 +1,837 @@
+{
+  "questions_path": "data\\eval\\questions_dev.json",
+  "result_files": {
+    "llm_only": "data\\results\\llm_only_results.jsonl",
+    "basic_rag": "data\\results\\basic_rag_results.jsonl",
+    "graphrag": "data\\results\\graphrag_results.jsonl"
+  },
+  "official_graphrag_base": {
+    "built_on": "https://github.com/tigergraph/graphrag",
+    "commit": "f649f4197f3dc18bf5bd7dd2fb0a0e477a5a70b9",
+    "available": true,
+    "customization": "LegalGraphRAG customizes TigerGraph GraphRAG with a legal schema, EA-GraphRAG routing, CommunityReport retrieval, and PathRAG-light pruning.",
+    "rows_with_metadata": 20,
+    "total_graphrag_rows": 20,
+    "all_rows_include_metadata": true
+  },
+  "summaries": {
+    "llm_only": {
+      "questions": 20,
+      "avg_total_tokens": 143.3,
+      "avg_prompt_tokens": 54.65,
+      "avg_completion_tokens": 88.65,
+      "avg_latency_ms": 1326.32,
+      "heuristic_pass_rate": 0.7,
+      "scored_questions": [
+        {
+          "question_id": "q001",
+          "lexical_f1": 0.625,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q002",
+          "lexical_f1": 0.1928,
+          "heuristic_pass": false
+        },
+        {
+          "question_id": "q003",
+          "lexical_f1": 0.1064,
+          "heuristic_pass": false
+        },
+        {
+          "question_id": "q004",
+          "lexical_f1": 0.9231,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q005",
+          "lexical_f1": 0.5,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q006",
+          "lexical_f1": 0.9286,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q007",
+          "lexical_f1": 0.8571,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q008",
+          "lexical_f1": 0.6,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q009",
+          "lexical_f1": 0.5,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q010",
+          "lexical_f1": 0.6761,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q011",
+          "lexical_f1": 0.5161,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q012",
+          "lexical_f1": 0.6296,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q013",
+          "lexical_f1": 0.2727,
+          "heuristic_pass": false
+        },
+        {
+          "question_id": "q014",
+          "lexical_f1": 0.2128,
+          "heuristic_pass": false
+        },
+        {
+          "question_id": "q015",
+          "lexical_f1": 0.1918,
+          "heuristic_pass": false
+        },
+        {
+          "question_id": "q016",
+          "lexical_f1": 0.2128,
+          "heuristic_pass": false
+        },
+        {
+          "question_id": "q017",
+          "lexical_f1": 0.3137,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q018",
+          "lexical_f1": 0.3165,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q019",
+          "lexical_f1": 0.2545,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q020",
+          "lexical_f1": 0.3214,
+          "heuristic_pass": true
+        }
+      ],
+      "judge_pass_rate": 0.35,
+      "bonus_judge_met": false,
+      "bertscore_f1_raw": 0.8166,
+      "bertscore_f1_rescaled": 0.4507,
+      "bonus_bertscore_raw_met": false,
+      "bonus_bertscore_rescaled_met": false
+    },
+    "basic_rag": {
+      "questions": 20,
+      "avg_total_tokens": 3746.85,
+      "avg_prompt_tokens": 3659.55,
+      "avg_completion_tokens": 87.3,
+      "avg_latency_ms": 1318.0,
+      "heuristic_pass_rate": 0.75,
+      "scored_questions": [
+        {
+          "question_id": "q001",
+          "lexical_f1": 1.0,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q002",
+          "lexical_f1": 0.0976,
+          "heuristic_pass": false
+        },
+        {
+          "question_id": "q003",
+          "lexical_f1": 0.0,
+          "heuristic_pass": false
+        },
+        {
+          "question_id": "q004",
+          "lexical_f1": 0.9231,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q005",
+          "lexical_f1": 0.6,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q006",
+          "lexical_f1": 1.0,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q007",
+          "lexical_f1": 0.8571,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q008",
+          "lexical_f1": 0.7,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q009",
+          "lexical_f1": 0.875,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q010",
+          "lexical_f1": 0.4651,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q011",
+          "lexical_f1": 0.3902,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q012",
+          "lexical_f1": 0.2174,
+          "heuristic_pass": false
+        },
+        {
+          "question_id": "q013",
+          "lexical_f1": 0.6111,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q014",
+          "lexical_f1": 0.2,
+          "heuristic_pass": false
+        },
+        {
+          "question_id": "q015",
+          "lexical_f1": 0.2381,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q016",
+          "lexical_f1": 0.2308,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q017",
+          "lexical_f1": 0.3019,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q018",
+          "lexical_f1": 0.3137,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q019",
+          "lexical_f1": 0.1951,
+          "heuristic_pass": false
+        },
+        {
+          "question_id": "q020",
+          "lexical_f1": 0.2927,
+          "heuristic_pass": true
+        }
+      ],
+      "judge_pass_rate": 0.55,
+      "bonus_judge_met": false,
+      "bertscore_f1_raw": 0.8337,
+      "bertscore_f1_rescaled": 0.5018,
+      "bonus_bertscore_raw_met": false,
+      "bonus_bertscore_rescaled_met": false
+    },
+    "graphrag": {
+      "questions": 20,
+      "avg_total_tokens": 2375.1,
+      "avg_prompt_tokens": 2323.55,
+      "avg_completion_tokens": 51.55,
+      "avg_latency_ms": 1312.45,
+      "heuristic_pass_rate": 0.95,
+      "scored_questions": [
+        {
+          "question_id": "q001",
+          "lexical_f1": 1.0,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q002",
+          "lexical_f1": 0.8,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q003",
+          "lexical_f1": 0.4375,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q004",
+          "lexical_f1": 0.6,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q005",
+          "lexical_f1": 0.7,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q006",
+          "lexical_f1": 0.9167,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q007",
+          "lexical_f1": 0.8571,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q008",
+          "lexical_f1": 0.75,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q009",
+          "lexical_f1": 0.8235,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q010",
+          "lexical_f1": 0.6176,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q011",
+          "lexical_f1": 0.4651,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q012",
+          "lexical_f1": 0.7042,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q013",
+          "lexical_f1": 0.5484,
+          "heuristic_pass": false
+        },
+        {
+          "question_id": "q014",
+          "lexical_f1": 0.4722,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q015",
+          "lexical_f1": 0.7429,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q016",
+          "lexical_f1": 0.52,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q017",
+          "lexical_f1": 0.5867,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q018",
+          "lexical_f1": 0.5,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q019",
+          "lexical_f1": 0.623,
+          "heuristic_pass": true
+        },
+        {
+          "question_id": "q020",
+          "lexical_f1": 0.5333,
+          "heuristic_pass": true
+        }
+      ],
+      "judge_pass_rate": 1.0,
+      "bonus_judge_met": true,
+      "bertscore_f1_raw": 0.9003,
+      "bertscore_f1_rescaled": 0.7013,
+      "bonus_bertscore_raw_met": true,
+      "bonus_bertscore_rescaled_met": true
+    }
+  },
+  "comparisons": {
+    "graphrag_vs_basic_rag_token_reduction_pct": 36.61,
+    "graphrag_vs_basic_rag_latency_reduction_pct": 0.42
+  },
+  "per_question": {
+    "q001": {
+      "llm_only": {
+        "total_tokens": 62,
+        "latency_ms": 1280.07,
+        "lexical_f1": 0.625,
+        "heuristic_pass": true,
+        "answer_preview": "The Supreme Court of North Carolina decided the case State v. Howerton."
+      },
+      "basic_rag": {
+        "total_tokens": 3745,
+        "latency_ms": 1003.44,
+        "lexical_f1": 1.0,
+        "heuristic_pass": true,
+        "answer_preview": "The Court of Criminal Appeals of Oklahoma decided the case State v. Howerton."
+      },
+      "graphrag": {
+        "total_tokens": 2174,
+        "latency_ms": 1684.97,
+        "lexical_f1": 1.0,
+        "heuristic_pass": true,
+        "answer_preview": "The Court of Criminal Appeals of Oklahoma decided the case State v. Howerton."
+      }
+    },
+    "q002": {
+      "llm_only": {
+        "total_tokens": 246,
+        "latency_ms": 2687.65,
+        "lexical_f1": 0.1928,
+        "heuristic_pass": false,
+        "answer_preview": "Common legal themes across criminal appeal opinions include:  *   **Sufficiency of evidence:** Whether the evidence presented at trial was enough to support the conviction. *   **E"
+      },
+      "basic_rag": {
+        "total_tokens": 3842,
+        "latency_ms": 2453.49,
+        "lexical_f1": 0.0976,
+        "heuristic_pass": false,
+        "answer_preview": "Common legal themes across criminal appeal opinions include:  *   **Appeals from convictions and sentences:** Many cases involve defendants appealing their convictions and sentence"
+      },
+      "graphrag": {
+        "total_tokens": 2173,
+        "latency_ms": 1578.69,
+        "lexical_f1": 0.8,
+        "heuristic_pass": true,
+        "answer_preview": "Common legal themes across criminal appeal opinions include standards of review, sufficiency of the evidence, ineffective assistance of counsel, and preservation of error."
+      }
+    },
+    "q003": {
+      "llm_only": {
+        "total_tokens": 232,
+        "latency_ms": 1446.77,
+        "lexical_f1": 0.1064,
+        "heuristic_pass": false,
+        "answer_preview": "Cited precedents influence a court's reasoning in criminal appeal opinions by providing a framework of established legal principles and past judicial decisions. Courts use preceden"
+      },
+      "basic_rag": {
+        "total_tokens": 3436,
+        "latency_ms": 1307.47,
+        "lexical_f1": 0.0,
+        "heuristic_pass": false,
+        "answer_preview": "The answer is not available in the retrieved context."
+      },
+      "graphrag": {
+        "total_tokens": 2255,
+        "latency_ms": 1484.77,
+        "lexical_f1": 0.4375,
+        "heuristic_pass": true,
+        "answer_preview": "Cited precedents influence criminal appeal opinions by providing controlling rules, standards of review, and analogies or distinctions to similar facts. These precedents help court"
+      }
+    },
+    "q004": {
+      "llm_only": {
+        "total_tokens": 91,
+        "latency_ms": 937.03,
+        "lexical_f1": 0.9231,
+        "heuristic_pass": true,
+        "answer_preview": "The citation for the case Bruce v. ICI Americas, Inc. is 931 F. Supp. 1066 (S.D. Ga. 1996)."
+      },
+      "basic_rag": {
+        "total_tokens": 3733,
+        "latency_ms": 922.81,
+        "lexical_f1": 0.9231,
+        "heuristic_pass": true,
+        "answer_preview": "The citation for the case Bruce v. ICI Americas, Inc. is 933 F. Supp. 781."
+      },
+      "graphrag": {
+        "total_tokens": 2173,
+        "latency_ms": 1062.16,
+        "lexical_f1": 0.6,
+        "heuristic_pass": true,
+        "answer_preview": "The citation for the case *Bruce v. ICI Americas, Inc.* is 933 F. Supp. 781. This case was decided by the United States District Court on May 15, 1996."
+      }
+    },
+    "q005": {
+      "llm_only": {
+        "total_tokens": 82,
+        "latency_ms": 802.79,
+        "lexical_f1": 0.5,
+        "heuristic_pass": true,
+        "answer_preview": "The case *Bell v. Turner* was decided in **North Carolina**. It was heard by the **North Carolina Court of Appeals**."
+      },
+      "basic_rag": {
+        "total_tokens": 3651,
+        "latency_ms": 1043.64,
+        "lexical_f1": 0.6,
+        "heuristic_pass": true,
+        "answer_preview": "The case Bell v. Turner was decided in Ohio, and the appellate district that heard it was the 4th District."
+      },
+      "graphrag": {
+        "total_tokens": 2549,
+        "latency_ms": 871.41,
+        "lexical_f1": 0.7,
+        "heuristic_pass": true,
+        "answer_preview": "The case *Bell v. Turner* was decided in Ohio. The Fourth Appellate District heard the case."
+      }
+    },
+    "q006": {
+      "llm_only": {
+        "total_tokens": 107,
+        "latency_ms": 1089.08,
+        "lexical_f1": 0.9286,
+        "heuristic_pass": true,
+        "answer_preview": "The court that decided Rosetta Stone Ltd. v. Google, Inc. was the United States Court of Appeals for the Fourth Circuit. The citation is 675 F.3d 310 (4th Cir. 2012)."
+      },
+      "basic_rag": {
+        "total_tokens": 3674,
+        "latency_ms": 1067.77,
+        "lexical_f1": 1.0,
+        "heuristic_pass": true,
+        "answer_preview": "The United States Court of Appeals for the Fourth Circuit decided *Rosetta Stone Ltd. v. Google, Inc.*, with the citation 676 F.3d 144."
+      },
+      "graphrag": {
+        "total_tokens": 2382,
+        "latency_ms": 966.96,
+        "lexical_f1": 0.9167,
+        "heuristic_pass": true,
+        "answer_preview": "The United States Court of Appeals decided *Rosetta Stone Ltd. v. Google, Inc.*, and the citation is 676 F.3d 144."
+      }
+    },
+    "q007": {
+      "llm_only": {
+        "total_tokens": 110,
+        "latency_ms": 1355.3,
+        "lexical_f1": 0.8571,
+        "heuristic_pass": true,
+        "answer_preview": "The court that decided *Commonwealth v. Jarabek* was the **Supreme Judicial Court of Massachusetts**.  The citations for the case are: *   384 Mass. 595 *   428 N.E.2d 1347"
+      },
+      "basic_rag": {
+        "total_tokens": 3709,
+        "latency_ms": 973.21,
+        "lexical_f1": 0.8571,
+        "heuristic_pass": true,
+        "answer_preview": "The Supreme Judicial Court of Massachusetts decided Commonwealth v. Jarabek. The case carries the citations 424 N.E.2d 491 and 384 Mass. 293."
+      },
+      "graphrag": {
+        "total_tokens": 2158,
+        "latency_ms": 863.77,
+        "lexical_f1": 0.8571,
+        "heuristic_pass": true,
+        "answer_preview": "The Supreme Judicial Court of Massachusetts decided Commonwealth v. Jarabek. The case carries the citations 424 N.E.2d 491 and 384 Mass. 293."
+      }
+    },
+    "q008": {
+      "llm_only": {
+        "total_tokens": 82,
+        "latency_ms": 756.27,
+        "lexical_f1": 0.6,
+        "heuristic_pass": true,
+        "answer_preview": "The Idaho Supreme Court decided State v. Jones in the 2003 Idaho case involving defendant Michael Wayne Jones."
+      },
+      "basic_rag": {
+        "total_tokens": 3792,
+        "latency_ms": 1074.46,
+        "lexical_f1": 0.7,
+        "heuristic_pass": true,
+        "answer_preview": "The Court of Appeals of Idaho decided *State v. Jones* in the 2003 Idaho case involving defendant Michael Wayne Jones."
+      },
+      "graphrag": {
+        "total_tokens": 2342,
+        "latency_ms": 805.45,
+        "lexical_f1": 0.75,
+        "heuristic_pass": true,
+        "answer_preview": "The Court of Appeals of Idaho decided State v. Jones, citing 77 P.3d 988 and 139 Idaho 299."
+      }
+    },
+    "q009": {
+      "llm_only": {
+        "total_tokens": 100,
+        "latency_ms": 1976.97,
+        "lexical_f1": 0.5,
+        "heuristic_pass": true,
+        "answer_preview": "The citation for Forgus v. Hodnett is 135 Cal. App. 4th 1178 (2006). The court that decided it was the California Court of Appeal, Fourth District."
+      },
+      "basic_rag": {
+        "total_tokens": 3459,
+        "latency_ms": 1020.23,
+        "lexical_f1": 0.875,
+        "heuristic_pass": true,
+        "answer_preview": "The citation for Forgus v. Hodnett is 405 S.W.2d 337, and the court that decided it was the Supreme Court of Texas."
+      },
+      "graphrag": {
+        "total_tokens": 2116,
+        "latency_ms": 1010.26,
+        "lexical_f1": 0.8235,
+        "heuristic_pass": true,
+        "answer_preview": "The citation for *Forgus v. Hodnett* is 405 S.W.2d 337. The Supreme Court of Texas decided this case."
+      }
+    },
+    "q010": {
+      "llm_only": {
+        "total_tokens": 162,
+        "latency_ms": 1159.49,
+        "lexical_f1": 0.6761,
+        "heuristic_pass": true,
+        "answer_preview": "The federal district court in *Sanders Ex Rel. Rayl v. Kansas Department of Social and Rehabilitation Services* analyzed the civil rights claims by determining whether the state ag"
+      },
+      "basic_rag": {
+        "total_tokens": 3886,
+        "latency_ms": 1405.63,
+        "lexical_f1": 0.4651,
+        "heuristic_pass": true,
+        "answer_preview": "The provided context does not contain information about how the federal district court in *Sanders Ex Rel. Rayl v. Kansas Department of Social and Rehabilitation Services* analyzed"
+      },
+      "graphrag": {
+        "total_tokens": 2313,
+        "latency_ms": 1703.19,
+        "lexical_f1": 0.6176,
+        "heuristic_pass": true,
+        "answer_preview": "The United States District Court for the District of Kansas analyzed the civil rights claims by considering due process and equal protection under the Constitution, as well as fede"
+      }
+    },
+    "q011": {
+      "llm_only": {
+        "total_tokens": 114,
+        "latency_ms": 1148.25,
+        "lexical_f1": 0.5161,
+        "heuristic_pass": true,
+        "answer_preview": "The case corpus includes cases from the following types of courts:  *   **District Courts:** These are the trial courts of the federal court system. *   **Courts of Appeals:** Thes"
+      },
+      "basic_rag": {
+        "total_tokens": 3854,
+        "latency_ms": 1100.92,
+        "lexical_f1": 0.3902,
+        "heuristic_pass": true,
+        "answer_preview": "The case corpus represents the following types of courts: Supreme Court of Pennsylvania, Supreme Court of Vermont, United States Supreme Court, Georgia Supreme Court, North Carolin"
+      },
+      "graphrag": {
+        "total_tokens": 2564,
+        "latency_ms": 1073.0,
+        "lexical_f1": 0.4651,
+        "heuristic_pass": true,
+        "answer_preview": "The case corpus includes United States District Courts, United States Courts of Appeals, and state supreme courts. Specialized state criminal appellate courts are also represented."
+      }
+    },
+    "q012": {
+      "llm_only": {
+        "total_tokens": 123,
+        "latency_ms": 1074.23,
+        "lexical_f1": 0.6296,
+        "heuristic_pass": true,
+        "answer_preview": "The constitutional rights most frequently raised in the criminal appeal cases in this corpus are:  *   **Fourth Amendment:** This amendment protects against unreasonable searches a"
+      },
+      "basic_rag": {
+        "total_tokens": 3843,
+        "latency_ms": 1086.71,
+        "lexical_f1": 0.2174,
+        "heuristic_pass": false,
+        "answer_preview": "The provided context does not contain information about criminal appeal cases or the constitutional rights most frequently raised in them. Therefore, the answer is not available in"
+      },
+      "graphrag": {
+        "total_tokens": 2780,
+        "latency_ms": 1176.85,
+        "lexical_f1": 0.7042,
+        "heuristic_pass": true,
+        "answer_preview": "The most frequently raised constitutional rights in criminal appeal cases are due process, Fourth Amendment search and seizure protections, and Fourteenth Amendment equal protectio"
+      }
+    },
+    "q013": {
+      "llm_only": {
+        "total_tokens": 126,
+        "latency_ms": 1043.05,
+        "lexical_f1": 0.2727,
+        "heuristic_pass": false,
+        "answer_preview": "Appellate courts in this corpus typically address claims of insufficient evidence by reviewing the evidence presented at trial to determine if it was legally sufficient to support "
+      },
+      "basic_rag": {
+        "total_tokens": 3770,
+        "latency_ms": 1059.63,
+        "lexical_f1": 0.6111,
+        "heuristic_pass": true,
+        "answer_preview": "Appellate courts review the sufficiency of the evidence de novo. They examine the admitted evidence to determine if it would convince the average mind of guilt beyond a reasonable "
+      },
+      "graphrag": {
+        "total_tokens": 2606,
+        "latency_ms": 1225.89,
+        "lexical_f1": 0.5484,
+        "heuristic_pass": false,
+        "answer_preview": "Appellate courts typically review sufficiency of the evidence claims by determining if a rational trier of fact could find the elements of the offense beyond a reasonable doubt, vi"
+      }
+    },
+    "q014": {
+      "llm_only": {
+        "total_tokens": 73,
+        "latency_ms": 1444.22,
+        "lexical_f1": 0.2128,
+        "heuristic_pass": false,
+        "answer_preview": "The provided text does not contain information about patterns in civil cases involving government or state agencies as defendants."
+      },
+      "basic_rag": {
+        "total_tokens": 3784,
+        "latency_ms": 934.84,
+        "lexical_f1": 0.2,
+        "heuristic_pass": false,
+        "answer_preview": "The provided context does not contain sufficient information to answer the question about patterns in civil cases involving government or state agencies as defendants."
+      },
+      "graphrag": {
+        "total_tokens": 2652,
+        "latency_ms": 1256.37,
+        "lexical_f1": 0.4722,
+        "heuristic_pass": true,
+        "answer_preview": "Civil cases involving government or state agencies as defendants frequently involve issues of sovereign immunity and qualified immunity. These cases often center on due process and"
+      }
+    },
+    "q015": {
+      "llm_only": {
+        "total_tokens": 181,
+        "latency_ms": 1134.67,
+        "lexical_f1": 0.1918,
+        "heuristic_pass": false,
+        "answer_preview": "The corpus contains civil disputes related to:  *   **Contract disputes:** This includes disagreements over the terms, performance, or breach of contracts. *   **Property disputes:"
+      },
+      "basic_rag": {
+        "total_tokens": 3713,
+        "latency_ms": 1247.83,
+        "lexical_f1": 0.2381,
+        "heuristic_pass": true,
+        "answer_preview": "The corpus contains civil disputes related to habeas corpus proceedings, as seen in *Cagle v. Davis*. Additionally, there are civil disputes concerning the placement of a child for"
+      },
+      "graphrag": {
+        "total_tokens": 2100,
+        "latency_ms": 1117.09,
+        "lexical_f1": 0.7429,
+        "heuristic_pass": true,
+        "answer_preview": "The corpus contains civil disputes alongside criminal cases, including contract disputes, civil rights claims, and intellectual property or trademark matters."
+      }
+    },
+    "q016": {
+      "llm_only": {
+        "total_tokens": 268,
+        "latency_ms": 1376.67,
+        "lexical_f1": 0.2128,
+        "heuristic_pass": false,
+        "answer_preview": "The most common procedural grounds on which courts deny or dismiss appeals in this corpus are:  *   **Lack of standing:** The appellant does not have a sufficient stake in the outc"
+      },
+      "basic_rag": {
+        "total_tokens": 3933,
+        "latency_ms": 1801.71,
+        "lexical_f1": 0.2308,
+        "heuristic_pass": true,
+        "answer_preview": "The provided context does not contain a comprehensive list of the most common procedural grounds on which courts deny or dismiss appeals. However, it does mention a few specific in"
+      },
+      "graphrag": {
+        "total_tokens": 2180,
+        "latency_ms": 1042.95,
+        "lexical_f1": 0.52,
+        "heuristic_pass": true,
+        "answer_preview": "Courts most commonly deny or dismiss appeals on procedural grounds such as waiver or failure to preserve error, lack of jurisdiction, and untimeliness. These grounds are often appl"
+      }
+    },
+    "q017": {
+      "llm_only": {
+        "total_tokens": 76,
+        "latency_ms": 778.95,
+        "lexical_f1": 0.3137,
+        "heuristic_pass": true,
+        "answer_preview": "The provided text does not contain information on how courts distinguish between direct appeals and post-conviction relief petitions."
+      },
+      "basic_rag": {
+        "total_tokens": 3623,
+        "latency_ms": 971.42,
+        "lexical_f1": 0.3019,
+        "heuristic_pass": true,
+        "answer_preview": "The provided context does not contain sufficient information to answer how courts distinguish between direct appeals and post-conviction relief petitions."
+      },
+      "graphrag": {
+        "total_tokens": 2240,
+        "latency_ms": 2936.18,
+        "lexical_f1": 0.5867,
+        "heuristic_pass": true,
+        "answer_preview": "Courts distinguish between direct appeals and post-conviction relief petitions by noting that direct appeals challenge trial error soon after judgment. Post-conviction or habeas pe"
+      }
+    },
+    "q018": {
+      "llm_only": {
+        "total_tokens": 463,
+        "latency_ms": 3327.7,
+        "lexical_f1": 0.3165,
+        "heuristic_pass": true,
+        "answer_preview": "The standard of review applied by an appellate court significantly affects the outcome of cases involving evidentiary rulings. Different standards of review give appellate courts v"
+      },
+      "basic_rag": {
+        "total_tokens": 3934,
+        "latency_ms": 2523.38,
+        "lexical_f1": 0.3137,
+        "heuristic_pass": true,
+        "answer_preview": "The standard of review applied by an appellate court affects the outcome of cases involving evidentiary rulings by determining the level of deference given to the trial court's dec"
+      },
+      "graphrag": {
+        "total_tokens": 2712,
+        "latency_ms": 1205.67,
+        "lexical_f1": 0.5,
+        "heuristic_pass": true,
+        "answer_preview": "Appellate courts review a district court's evidentiary rulings for an abuse of discretion, meaning they will only reverse if they are firmly convinced a mistake was made that affec"
+      }
+    },
+    "q019": {
+      "llm_only": {
+        "total_tokens": 80,
+        "latency_ms": 901.95,
+        "lexical_f1": 0.2545,
+        "heuristic_pass": true,
+        "answer_preview": "I cannot answer this question. The provided text does not contain information about how federal circuit courts approach constitutional questions differently from state appellate co"
+      },
+      "basic_rag": {
+        "total_tokens": 3744,
+        "latency_ms": 1877.08,
+        "lexical_f1": 0.1951,
+        "heuristic_pass": false,
+        "answer_preview": "The provided context does not contain sufficient information to answer how federal circuit courts approach constitutional questions differently from state appellate courts. The exc"
+      },
+      "graphrag": {
+        "total_tokens": 2393,
+        "latency_ms": 1304.84,
+        "lexical_f1": 0.623,
+        "heuristic_pass": true,
+        "answer_preview": "Federal circuit courts review pure constitutional questions de novo, applying federal constitutional doctrine and Supreme Court precedent. State appellate courts, however, consider"
+      }
+    },
+    "q020": {
+      "llm_only": {
+        "total_tokens": 88,
+        "latency_ms": 805.25,
+        "lexical_f1": 0.3214,
+        "heuristic_pass": true,
+        "answer_preview": "The corpus does not contain information on how courts apply the two-part Strickland test in criminal cases where ineffective assistance of counsel is claimed."
+      },
+      "basic_rag": {
+        "total_tokens": 3812,
+        "latency_ms": 1484.27,
+        "lexical_f1": 0.2927,
+        "heuristic_pass": true,
+        "answer_preview": "In criminal cases where ineffective assistance of counsel is claimed, courts apply the two-part *Strickland* test. This test requires the defendant to show: (1) that counsel's perf"
+      },
+      "graphrag": {
+        "total_tokens": 2640,
+        "latency_ms": 1878.53,
+        "lexical_f1": 0.5333,
+        "heuristic_pass": true,
+        "answer_preview": "In criminal cases claiming ineffective assistance of counsel, courts apply the two-part Strickland test by first determining if counsel's performance was deficient, meaning it fell"
+      }
+    }
+  },
+  "notes": [
+    "Heuristic pass and lexical F1 are lightweight local checks, not replacements for the required LLM-as-a-Judge and BERTScore evaluation.",
+    "Costs are intentionally omitted here; add provider pricing at report time to avoid stale pricing assumptions."
+  ]
+}
