@@ -30,7 +30,7 @@ const evolutionRuns = [
     title: "Baseline",
     judge: "35%",
     bert: "0.839",
-    token: "n/a",
+    token: "not measured",
     summary: "No retrieval, parametric memory only.",
     solved: "Established the LLM-only floor and exposed corpus-specific recall gaps.",
     breakdown: "LLM-only: 7/20 pass. Basic RAG and GraphRAG were not yet optimized.",
@@ -414,7 +414,7 @@ function ArchitecturePage({ onHome }) {
                   <strong>{run.title}</strong>
                 </span>
                 <span className="timeline-metrics">
-                  Judge {run.judge} · BERTScore {run.bert} · Token {run.token}
+                  Judge {run.judge} · BERTScore {run.bert} · Token reduction {run.token}
                 </span>
                 <span>{run.summary}</span>
                 {openRun === run.id ? (
