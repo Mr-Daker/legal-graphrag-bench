@@ -103,8 +103,14 @@ function mergeResults(payload) {
 
 function normalizePipeline(item, matched) {
   if (!item) return null;
+  const answer = String(item.answer || "");
+  const cleanAnswer =
+    /Traceback \(most recent call last\)|site-packages|httpx\\?_transports/i.test(answer)
+      ? "The live backend returned an internal Python error for this run. Please retry after the API/network recovers; the pre-computed v9 benchmark below remains valid."
+      : answer;
   return {
     ...item,
+    answer: cleanAnswer,
     bertscore: {
       value: item.bertscore,
       matched,
