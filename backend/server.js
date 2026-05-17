@@ -98,6 +98,37 @@ function metricFor(pipeline, qid) {
   };
 }
 
+function liveVerdictForAnswer(answer = "") {
+  const normalized = String(answer).toLowerCase();
+  if (!normalized.trim()) return "FAIL";
+
+  const refusalSignals = [
+    "does not contain",
+    "not contain information",
+    "not available in the retrieved context",
+    "cannot be answered",
+    "cannot answer",
+    "too vague",
+    "please specify",
+    "needs a specific",
+    "insufficient information",
+    "not enough information",
+  ];
+
+  if (refusalSignals.some((signal) => normalized.includes(signal))) {
+    return "FAIL";
+  }
+
+  return "PASS";
+}
+
+function verdictForAnswer(pipeline, qid, answer) {
+  if (qid) {
+    return metricFor(pipeline, qid).verdict;
+  }
+  return liveVerdictForAnswer(answer);
+}
+
 function extractJson(stdout) {
   const start = stdout.indexOf("{");
   const end = stdout.lastIndexOf("}");
@@ -177,12 +208,13 @@ function fallbackPipeline(name, question, qid, reason = "") {
   const command = pipelineCommands[name];
   const metrics = finalV9Summary[name];
   const savedMetrics = metricFor(name, qid);
+  const answer = fallbackAnswer(name, question);
   return {
-    answer: fallbackAnswer(name, question),
+    answer,
     tokens: Math.round(metrics.avg_total_tokens),
     latency_ms: Math.round(metrics.avg_latency_ms),
     cost_usd: name === "llm_only" ? 0.000041 : name === "basic_rag" ? 0.000401 : 0.000253,
-    verdict: qid ? savedMetrics.verdict : "N/A",
+    verdict: qid ? savedMetrics.verdict : liveVerdictForAnswer(answer),
     bertscore: qid ? savedMetrics.bertscore : metrics.bertscore_f1_raw,
     prompt_tokens: Math.round(metrics.avg_prompt_tokens),
     completion_tokens: Math.round(metrics.avg_completion_tokens),
@@ -253,12 +285,13 @@ function runPipeline(name, question, qid) {
       try {
         const raw = extractJson(stdout);
         const metrics = metricFor(name, qid);
+        const answer = raw.answer || "";
         resolve({
-          answer: raw.answer || "",
+          answer,
           tokens: raw.total_tokens ?? 0,
           latency_ms: raw.latency_ms ?? 0,
           cost_usd: raw.cost_usd ?? 0,
-          verdict: metrics.verdict,
+          verdict: qid ? metrics.verdict : verdictForAnswer(name, qid, answer),
           bertscore: metrics.bertscore,
           prompt_tokens: raw.prompt_tokens ?? 0,
           completion_tokens: raw.completion_tokens ?? 0,
