@@ -173,16 +173,17 @@ function fallbackAnswer(name, question) {
     : "The LLM-only baseline answers directly from model memory, so for corpus-specific legal questions it may be incomplete or ungrounded.";
 }
 
-function fallbackPipeline(name, question, reason = "") {
+function fallbackPipeline(name, question, qid, reason = "") {
   const command = pipelineCommands[name];
   const metrics = finalV9Summary[name];
+  const savedMetrics = metricFor(name, qid);
   return {
     answer: fallbackAnswer(name, question),
     tokens: Math.round(metrics.avg_total_tokens),
     latency_ms: Math.round(metrics.avg_latency_ms),
     cost_usd: name === "llm_only" ? 0.000041 : name === "basic_rag" ? 0.000401 : 0.000253,
-    verdict: "N/A",
-    bertscore: metrics.bertscore_f1_raw,
+    verdict: qid ? savedMetrics.verdict : "N/A",
+    bertscore: qid ? savedMetrics.bertscore : metrics.bertscore_f1_raw,
     prompt_tokens: Math.round(metrics.avg_prompt_tokens),
     completion_tokens: Math.round(metrics.avg_completion_tokens),
     model: "gemini-2.5-flash-lite",
@@ -216,7 +217,7 @@ function runPipeline(name, question, qid) {
         windowsHide: true,
       });
     } catch (error) {
-      resolve(fallbackPipeline(name, question, `Could not start ${command.label}: ${error.message}`));
+      resolve(fallbackPipeline(name, question, qid, `Could not start ${command.label}: ${error.message}`));
       return;
     }
 
@@ -229,14 +230,14 @@ function runPipeline(name, question, qid) {
       stderr += chunk.toString();
     });
     child.on("error", (error) => {
-      resolve(fallbackPipeline(name, question, `Could not start ${command.label}: ${error.message}`));
+      resolve(fallbackPipeline(name, question, qid, `Could not start ${command.label}: ${error.message}`));
     });
     child.on("close", (code) => {
       if (code !== 0) {
         const detail = stderr.trim() || `${command.label} exited with code ${code}.`;
         resolve(
           isInternalFailure(detail)
-            ? fallbackPipeline(name, question)
+            ? fallbackPipeline(name, question, qid)
             : {
                 answer: detail,
                 tokens: 0,
@@ -264,7 +265,7 @@ function runPipeline(name, question, qid) {
           model: raw.generation_model || raw.model,
         });
       } catch (error) {
-        resolve(fallbackPipeline(name, question, `Could not parse ${command.label} output.`));
+        resolve(fallbackPipeline(name, question, qid, `Could not parse ${command.label} output.`));
       }
     });
   });
