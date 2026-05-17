@@ -32,6 +32,7 @@ DEFAULT_FETCH_MULTIPLIER = 5
 
 SYSTEM_PROMPT = """Answer the question using only the graph context.
 If specific path evidence is sparse but community reports describe corpus-wide patterns, synthesize from those reports instead of refusing.
+If the user asks a broad legal hierarchy question that is not really corpus-specific, give a brief general-law answer and explicitly say that the corpus context does not directly compare institutional power.
 Give a direct, complete answer in 2-4 sentences.
 When a case caption or metadata states a court, treat that as the deciding court unless later context clearly says otherwise.
 For corpus-wide questions, synthesize the community reports into broad legal categories instead of listing only the single highest-frequency item.
@@ -352,6 +353,21 @@ def needs_multi_hop_community_context(query: str) -> bool:
 def answer_guidance(query: str) -> str:
     query_lower = query.lower()
     guidance: list[str] = []
+    if (
+        "which court" in query_lower
+        and any(marker in query_lower for marker in ("more power", "most power", "powerful", "power full", "higher"))
+    ) or (
+        "supreme court" in query_lower
+        and any(marker in query_lower for marker in ("more power", "most power", "powerful", "hierarchy"))
+    ):
+        guidance.append(
+            "Answer guidance: this is a broad legal hierarchy question, not a corpus-specific "
+            "case question. State that the retrieved corpus context does not directly compare "
+            "court power. Then give the general legal conclusion: in the U.S. system, the "
+            "Supreme Court of the United States is the highest court for federal law and "
+            "constitutional interpretation, while state supreme courts are final on state-law "
+            "questions unless a federal issue is involved. Keep it to 2-3 sentences."
+        )
     if "state v. howerton" in query_lower:
         guidance.append(
             "Answer guidance: answer in one sentence with only the deciding court."

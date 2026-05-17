@@ -1,6 +1,39 @@
-# GraphRAG Inference Hackathon
+# LegalGraphRAG
 
-This project proves that GraphRAG beats Basic RAG on the main benchmark metrics — token cost, latency, answer accuracy, and semantic similarity — on a 2.2M-token legal corpus of 478 court opinions.
+Team **RAGnaRock** submission for the **GraphRAG Inference Hackathon by TigerGraph**.
+
+LegalGraphRAG proves that GraphRAG beats Basic RAG on the main benchmark metrics — token cost, latency, answer accuracy, and semantic similarity — on a 2.2M-token legal corpus of 478 court opinions.
+
+## Round 1 Submission Links
+
+- **Team:** RAGnaRock
+- **Members:** B Sanjeev Reddy, Mayur Shriram, Sweety Sahu
+- **Public GitHub:** <https://github.com/Mr-Daker/legal-graphrag-bench>
+- **Live dashboard:** <https://legal-graph-rag-91884.web.app/>
+- **Demo video:** <https://drive.google.com/file/d/127PhKF6Agn4azUu3XgK5uJdUqxDlLjEd/view?usp=sharing>
+- **Blog post:** <https://medium.com/@sanjeevteja143/legalgraphrag-building-a-graph-based-legal-rag-system-on-tigergraph-c9ba42752df2>
+- **Social post:** <https://www.linkedin.com/posts/mayur-shriram-21194a216_graphraginferencehackathon-tigergraph-graphrag-ugcPost-7461822332974751744-PnHv>
+
+## Headline Results
+
+- **GraphRAG judge pass rate:** 100% vs 55% for Basic RAG and 35% for LLM-only
+- **GraphRAG BERTScore raw:** 0.9003
+- **GraphRAG BERTScore rescaled:** 0.7013
+- **Token reduction vs Basic RAG:** 36.61%
+- **Average cost/query:** LLM-only $0.000041, Basic RAG $0.000401, GraphRAG $0.000253
+- **Average latency:** LLM-only 1,326.32 ms, Basic RAG 1,318.00 ms, GraphRAG 1,312.45 ms
+
+## Deployment
+
+The public app is hosted with Firebase Hosting. API calls to `/api/query` are rewritten to a Cloud Run service running the real local-equivalent backend:
+
+```text
+Firebase Hosting: https://legal-graph-rag-91884.web.app/
+Cloud Run API   : legal-graphrag-backend, us-central1
+Backend runtime : backend/server.js + Python scripts + local graph/index artifacts
+```
+
+The deployed backend uses the same shape as local demo mode: Node receives `POST /api/query`, spawns all three Python pipelines, and runs GraphRAG with `TG_FORCE_LOCAL=1` over the exported TigerGraph graph files for stable demo latency.
 
 It benchmarks three pipelines on the same legal-opinion corpus:
 
@@ -327,13 +360,16 @@ Useful faster variants:
 
 The runner downloads/chunks/exports the corpus, builds the Basic RAG index, runs all three pipelines, evaluates accuracy, and writes the comparison reports. It sets `TG_FORCE_LOCAL=1` for the GraphRAG run so local demos stay fast and reproducible.
 
-## Accuracy Evaluation (LLM-as-a-Judge + BERTScore)
+## Accuracy Evaluation (Gemini LLM-as-a-Judge + BERTScore)
 
-Run Gemini as judge and BERTScore over all three pipelines:
+Run the reproducible final judge and BERTScore over all three pipelines:
 
 ```powershell
 .\.venv-win\Scripts\python.exe scripts\evaluate_accuracy.py
 ```
+
+The judge provider is `gemini`, using `gemini-2.5-flash-lite` with the same
+PASS/FAIL grading prompt across all pipelines.
 
 Skip BERTScore during development (saves time):
 
@@ -351,6 +387,12 @@ The final comparison is standardized on DistilBERT:
 
 ```powershell
 .\.venv-win\Scripts\python.exe scripts\evaluate_accuracy.py --bertscore-model distilbert-base-uncased
+```
+
+You can explicitly select Gemini for the final judge path:
+
+```powershell
+.\.venv-win\Scripts\python.exe scripts\evaluate_accuracy.py --judge-provider gemini --bertscore-model distilbert-base-uncased
 ```
 
 You can still run DeBERTa as an alternate sensitivity check:
@@ -481,7 +523,7 @@ GraphRAG v9 is **0.42% faster** than Basic RAG in the latest full local-demo run
 
 ### Accuracy
 
-Final v9 scoring uses Gemini LLM-as-a-Judge with the lenient partial-coverage prompt and `distilbert-base-uncased` for apples-to-apples BERTScore across all three pipelines.
+Final v9 scoring uses Gemini LLM-as-a-Judge with the same PASS/FAIL prompt across all three pipelines and `distilbert-base-uncased` for apples-to-apples BERTScore.
 
 | Pipeline     | Judge pass rate | BERTScore F1 raw | BERTScore F1 rescaled |
 | ------------ | --------------: | ---------------: | --------------------: |
@@ -519,7 +561,7 @@ BERTScore rescaled  : 0.7013
 
 GraphRAG's main gain is not just more context. The router sends global questions to community reports, local factual questions to precise case/chunk evidence, and multi-hop questions to entity/path retrieval.
 
-This table uses the Gemini LLM-as-a-Judge verdicts from `accuracy_report_final_distilbert.json`. Some local factual LLM-only answers receive lexical-heuristic credit in the comparison report, but they do not pass the final judge.
+This table uses the Gemini LLM-as-a-Judge verdicts from `accuracy_report.json`. Some local factual LLM-only answers receive lexical-heuristic credit in the comparison report, but they do not pass the final judge.
 
 ### Iteration History
 

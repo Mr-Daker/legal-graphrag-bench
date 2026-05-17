@@ -35,6 +35,8 @@ data/reports/*
 !data/reports/tigergraph_export_report.json
 !data/reports/pipeline_comparison_report.json
 !data/reports/pipeline_comparison_report.md
+!data/reports/accuracy_report.json
+!data/reports/accuracy_report.md
 !data/reports/accuracy_report_final_distilbert.json
 !data/reports/accuracy_report_final_distilbert.md
 !data/reports/accuracy_report_v9_graphrag.json
@@ -58,4 +60,7 @@ Thumbs.db
 # --- Misc cache ---
 .cache/
 .huggingface/
+.firebase/
 *.log
+/arch.svg
+PPT/

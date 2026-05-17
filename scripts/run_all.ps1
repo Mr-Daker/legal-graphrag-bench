@@ -2,6 +2,8 @@ param(
     [switch]$SkipDataset,
     [switch]$SkipIndex,
     [switch]$SkipAccuracy,
+    [ValidateSet("gemini", "xai")]
+    [string]$JudgeProvider = "gemini",
     [switch]$DryRun
 )
 
@@ -17,7 +19,7 @@ Push-Location $Root
 try {
     if ($DryRun) {
         Write-Host "Would run benchmark from $Root"
-        Write-Host "Gemini-only final run; clearing local proxy variables and forcing TG_FORCE_LOCAL=1"
+        Write-Host "Final run: Gemini generation, $JudgeProvider LLM-as-a-Judge, TG_FORCE_LOCAL=1"
         if (-not $SkipDataset) {
             Write-Host "$Python scripts\download_cold_cases.py"
             Write-Host "$Python scripts\chunk_corpus.py"
@@ -30,13 +32,15 @@ try {
         Write-Host "$Python scripts\basic_rag_gemini.py"
         Write-Host "TG_FORCE_LOCAL=1 $Python scripts\graphrag_tigergraph.py"
         if (-not $SkipAccuracy) {
-            Write-Host "$Python scripts\evaluate_accuracy.py --bertscore-model distilbert-base-uncased"
+            Write-Host "$Python scripts\evaluate_accuracy.py --judge-provider $JudgeProvider --bertscore-model distilbert-base-uncased"
         }
         Write-Host "$Python scripts\compare_pipelines.py --accuracy-report data\reports\accuracy_report.json"
         return
     }
 
-    # Final benchmark path: Gemini generation/judging over the exported TigerGraph graph.
+    # Final benchmark path: Gemini generation over the exported TigerGraph graph.
+    # Accuracy uses the selected LLM-as-a-Judge provider, defaulting to Gemini for
+    # the final benchmark path.
     # Some local shells carry disabled proxy env vars; clear them for outbound LLM API calls.
     Remove-Item Env:HTTP_PROXY,Env:HTTPS_PROXY,Env:ALL_PROXY -ErrorAction SilentlyContinue
     $env:LLM_PROVIDER = "gemini"
@@ -60,7 +64,7 @@ try {
     & $Python scripts\graphrag_tigergraph.py
 
     if (-not $SkipAccuracy) {
-        & $Python scripts\evaluate_accuracy.py --bertscore-model distilbert-base-uncased
+        & $Python scripts\evaluate_accuracy.py --judge-provider $JudgeProvider --bertscore-model distilbert-base-uncased
     }
 
     & $Python scripts\compare_pipelines.py --accuracy-report data\reports\accuracy_report.json

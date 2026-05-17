@@ -35,7 +35,7 @@ export default function QueryInput({ question, setQuestion, onRun, onSampleSelec
             if (event.key === "Enter") onRun();
           }}
         />
-        <button className="run-button" type="button" onClick={onRun} disabled={loading}>
+        <button className="run-button" type="button" onClick={() => onRun()} disabled={loading}>
           <span aria-hidden="true">{loading ? "●" : "▶"}</span>
           {loading ? "Running" : "Run all pipelines"}
         </button>

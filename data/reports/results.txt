@@ -131,6 +131,8 @@ PIPELINE 3 - GraphRAG
 ACCURACY EVALUATION - LLM-as-a-Judge + BERTScore
   Judge model     : gemini-2.5-flash-lite
   BERTScore model : distilbert-base-uncased
+  Judge note      : current valid benchmark uses the same PASS/FAIL
+                    LLM-as-a-Judge prompt across all pipelines with Gemini.
 
   FINAL RESULTS SUMMARY
   Pipeline  | Judge | BERT raw | BERT rescaled | Avg tokens | Avg latency
@@ -210,5 +212,8 @@ OUTPUT FILES
   data/reports/accuracy_report.json
   data/reports/accuracy_report.md
   data/reports/results.txt
+  DOCS/blog_post_draft.md
+  DOCS/legalgraphrag_architecture_medium.png
+  DOCS/final_benchmark_table_transparent.png
 
 ==============================================================

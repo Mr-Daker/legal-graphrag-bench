@@ -1,0 +1,756 @@
+{
+  "metadata": {
+    "judge_provider": "gemini",
+    "judge_model": "gemini-2.5-flash-lite",
+    "bertscore_model": "distilbert-base-uncased",
+    "bertscore_skipped": false
+  },
+  "pipelines": {
+    "llm_only": {
+      "pipeline": "llm_only",
+      "questions_evaluated": 20,
+      "judge": {
+        "pass_count": 7,
+        "pass_rate": 0.35,
+        "bonus_judge_met": false,
+        "per_question": [
+          {
+            "question_id": "q001",
+            "question_type": "local_factual",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          },
+          {
+            "question_id": "q002",
+            "question_type": "global_synthesis",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q003",
+            "question_type": "multi_hop",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q004",
+            "question_type": "local_factual",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          },
+          {
+            "question_id": "q005",
+            "question_type": "local_factual",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          },
+          {
+            "question_id": "q006",
+            "question_type": "local_factual",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          },
+          {
+            "question_id": "q007",
+            "question_type": "local_factual",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          },
+          {
+            "question_id": "q008",
+            "question_type": "local_factual",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          },
+          {
+            "question_id": "q009",
+            "question_type": "local_factual",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          },
+          {
+            "question_id": "q010",
+            "question_type": "multi_hop",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q011",
+            "question_type": "global_synthesis",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          },
+          {
+            "question_id": "q012",
+            "question_type": "global_synthesis",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q013",
+            "question_type": "global_synthesis",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q014",
+            "question_type": "global_synthesis",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          },
+          {
+            "question_id": "q015",
+            "question_type": "global_synthesis",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q016",
+            "question_type": "global_synthesis",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          },
+          {
+            "question_id": "q017",
+            "question_type": "multi_hop",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          },
+          {
+            "question_id": "q018",
+            "question_type": "multi_hop",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q019",
+            "question_type": "multi_hop",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          },
+          {
+            "question_id": "q020",
+            "question_type": "multi_hop",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          }
+        ]
+      },
+      "bertscore": {
+        "model_type": "distilbert-base-uncased",
+        "f1_raw": 0.8166,
+        "f1_rescaled": 0.4507,
+        "bonus_bertscore_rescaled_met": false,
+        "bonus_bertscore_raw_met": false,
+        "per_question": [
+          {
+            "question_id": "q001",
+            "f1_raw": 0.8913,
+            "f1_rescaled": 0.6743
+          },
+          {
+            "question_id": "q002",
+            "f1_raw": 0.7329,
+            "f1_rescaled": 0.1998
+          },
+          {
+            "question_id": "q003",
+            "f1_raw": 0.7582,
+            "f1_rescaled": 0.2757
+          },
+          {
+            "question_id": "q004",
+            "f1_raw": 0.941,
+            "f1_rescaled": 0.8231
+          },
+          {
+            "question_id": "q005",
+            "f1_raw": 0.7736,
+            "f1_rescaled": 0.3218
+          },
+          {
+            "question_id": "q006",
+            "f1_raw": 0.9343,
+            "f1_rescaled": 0.8031
+          },
+          {
+            "question_id": "q007",
+            "f1_raw": 0.8738,
+            "f1_rescaled": 0.6218
+          },
+          {
+            "question_id": "q008",
+            "f1_raw": 0.8504,
+            "f1_rescaled": 0.5519
+          },
+          {
+            "question_id": "q009",
+            "f1_raw": 0.8474,
+            "f1_rescaled": 0.5427
+          },
+          {
+            "question_id": "q010",
+            "f1_raw": 0.8612,
+            "f1_rescaled": 0.5841
+          },
+          {
+            "question_id": "q011",
+            "f1_raw": 0.7593,
+            "f1_rescaled": 0.2789
+          },
+          {
+            "question_id": "q012",
+            "f1_raw": 0.8153,
+            "f1_rescaled": 0.4467
+          },
+          {
+            "question_id": "q013",
+            "f1_raw": 0.8169,
+            "f1_rescaled": 0.4515
+          },
+          {
+            "question_id": "q014",
+            "f1_raw": 0.7724,
+            "f1_rescaled": 0.3183
+          },
+          {
+            "question_id": "q015",
+            "f1_raw": 0.7546,
+            "f1_rescaled": 0.2648
+          },
+          {
+            "question_id": "q016",
+            "f1_raw": 0.7359,
+            "f1_rescaled": 0.2087
+          },
+          {
+            "question_id": "q017",
+            "f1_raw": 0.8169,
+            "f1_rescaled": 0.4515
+          },
+          {
+            "question_id": "q018",
+            "f1_raw": 0.7854,
+            "f1_rescaled": 0.3572
+          },
+          {
+            "question_id": "q019",
+            "f1_raw": 0.8009,
+            "f1_rescaled": 0.4034
+          },
+          {
+            "question_id": "q020",
+            "f1_raw": 0.8112,
+            "f1_rescaled": 0.4343
+          }
+        ]
+      }
+    },
+    "basic_rag": {
+      "pipeline": "basic_rag",
+      "questions_evaluated": 20,
+      "judge": {
+        "pass_count": 11,
+        "pass_rate": 0.55,
+        "bonus_judge_met": false,
+        "per_question": [
+          {
+            "question_id": "q001",
+            "question_type": "local_factual",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q002",
+            "question_type": "global_synthesis",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q003",
+            "question_type": "multi_hop",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          },
+          {
+            "question_id": "q004",
+            "question_type": "local_factual",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q005",
+            "question_type": "local_factual",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q006",
+            "question_type": "local_factual",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q007",
+            "question_type": "local_factual",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q008",
+            "question_type": "local_factual",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q009",
+            "question_type": "local_factual",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q010",
+            "question_type": "multi_hop",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          },
+          {
+            "question_id": "q011",
+            "question_type": "global_synthesis",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          },
+          {
+            "question_id": "q012",
+            "question_type": "global_synthesis",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          },
+          {
+            "question_id": "q013",
+            "question_type": "global_synthesis",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          },
+          {
+            "question_id": "q014",
+            "question_type": "global_synthesis",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          },
+          {
+            "question_id": "q015",
+            "question_type": "global_synthesis",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          },
+          {
+            "question_id": "q016",
+            "question_type": "global_synthesis",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q017",
+            "question_type": "multi_hop",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          },
+          {
+            "question_id": "q018",
+            "question_type": "multi_hop",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q019",
+            "question_type": "multi_hop",
+            "verdict": "FAIL",
+            "judge_raw": "FAIL"
+          },
+          {
+            "question_id": "q020",
+            "question_type": "multi_hop",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          }
+        ]
+      },
+      "bertscore": {
+        "model_type": "distilbert-base-uncased",
+        "f1_raw": 0.8337,
+        "f1_rescaled": 0.5018,
+        "bonus_bertscore_rescaled_met": false,
+        "bonus_bertscore_raw_met": false,
+        "per_question": [
+          {
+            "question_id": "q001",
+            "f1_raw": 0.9589,
+            "f1_rescaled": 0.8769
+          },
+          {
+            "question_id": "q002",
+            "f1_raw": 0.6684,
+            "f1_rescaled": 0.0067
+          },
+          {
+            "question_id": "q003",
+            "f1_raw": 0.7357,
+            "f1_rescaled": 0.2083
+          },
+          {
+            "question_id": "q004",
+            "f1_raw": 0.9501,
+            "f1_rescaled": 0.8506
+          },
+          {
+            "question_id": "q005",
+            "f1_raw": 0.8681,
+            "f1_rescaled": 0.6048
+          },
+          {
+            "question_id": "q006",
+            "f1_raw": 0.9389,
+            "f1_rescaled": 0.817
+          },
+          {
+            "question_id": "q007",
+            "f1_raw": 0.9381,
+            "f1_rescaled": 0.8146
+          },
+          {
+            "question_id": "q008",
+            "f1_raw": 0.86,
+            "f1_rescaled": 0.5805
+          },
+          {
+            "question_id": "q009",
+            "f1_raw": 0.9163,
+            "f1_rescaled": 0.7493
+          },
+          {
+            "question_id": "q010",
+            "f1_raw": 0.8303,
+            "f1_rescaled": 0.4917
+          },
+          {
+            "question_id": "q011",
+            "f1_raw": 0.8536,
+            "f1_rescaled": 0.5615
+          },
+          {
+            "question_id": "q012",
+            "f1_raw": 0.7596,
+            "f1_rescaled": 0.2798
+          },
+          {
+            "question_id": "q013",
+            "f1_raw": 0.8799,
+            "f1_rescaled": 0.6402
+          },
+          {
+            "question_id": "q014",
+            "f1_raw": 0.7742,
+            "f1_rescaled": 0.3237
+          },
+          {
+            "question_id": "q015",
+            "f1_raw": 0.7713,
+            "f1_rescaled": 0.3148
+          },
+          {
+            "question_id": "q016",
+            "f1_raw": 0.7455,
+            "f1_rescaled": 0.2375
+          },
+          {
+            "question_id": "q017",
+            "f1_raw": 0.8205,
+            "f1_rescaled": 0.4624
+          },
+          {
+            "question_id": "q018",
+            "f1_raw": 0.8107,
+            "f1_rescaled": 0.4328
+          },
+          {
+            "question_id": "q019",
+            "f1_raw": 0.7901,
+            "f1_rescaled": 0.371
+          },
+          {
+            "question_id": "q020",
+            "f1_raw": 0.8037,
+            "f1_rescaled": 0.412
+          }
+        ]
+      }
+    },
+    "graphrag": {
+      "pipeline": "graphrag",
+      "questions_evaluated": 20,
+      "judge": {
+        "pass_count": 20,
+        "pass_rate": 1.0,
+        "bonus_judge_met": true,
+        "per_question": [
+          {
+            "question_id": "q001",
+            "question_type": "local_factual",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q002",
+            "question_type": "global_synthesis",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q003",
+            "question_type": "multi_hop",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q004",
+            "question_type": "local_factual",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q005",
+            "question_type": "local_factual",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q006",
+            "question_type": "local_factual",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q007",
+            "question_type": "local_factual",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q008",
+            "question_type": "local_factual",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q009",
+            "question_type": "local_factual",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q010",
+            "question_type": "multi_hop",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q011",
+            "question_type": "global_synthesis",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q012",
+            "question_type": "global_synthesis",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q013",
+            "question_type": "global_synthesis",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q014",
+            "question_type": "global_synthesis",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q015",
+            "question_type": "global_synthesis",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q016",
+            "question_type": "global_synthesis",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q017",
+            "question_type": "multi_hop",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q018",
+            "question_type": "multi_hop",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q019",
+            "question_type": "multi_hop",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          },
+          {
+            "question_id": "q020",
+            "question_type": "multi_hop",
+            "verdict": "PASS",
+            "judge_raw": "PASS"
+          }
+        ]
+      },
+      "bertscore": {
+        "model_type": "distilbert-base-uncased",
+        "f1_raw": 0.9003,
+        "f1_rescaled": 0.7013,
+        "bonus_bertscore_rescaled_met": true,
+        "bonus_bertscore_raw_met": true,
+        "per_question": [
+          {
+            "question_id": "q001",
+            "f1_raw": 0.9589,
+            "f1_rescaled": 0.8769
+          },
+          {
+            "question_id": "q002",
+            "f1_raw": 0.9579,
+            "f1_rescaled": 0.874
+          },
+          {
+            "question_id": "q003",
+            "f1_raw": 0.8708,
+            "f1_rescaled": 0.6128
+          },
+          {
+            "question_id": "q004",
+            "f1_raw": 0.8885,
+            "f1_rescaled": 0.6661
+          },
+          {
+            "question_id": "q005",
+            "f1_raw": 0.8764,
+            "f1_rescaled": 0.6298
+          },
+          {
+            "question_id": "q006",
+            "f1_raw": 0.9193,
+            "f1_rescaled": 0.7582
+          },
+          {
+            "question_id": "q007",
+            "f1_raw": 0.9381,
+            "f1_rescaled": 0.8146
+          },
+          {
+            "question_id": "q008",
+            "f1_raw": 0.9304,
+            "f1_rescaled": 0.7913
+          },
+          {
+            "question_id": "q009",
+            "f1_raw": 0.9178,
+            "f1_rescaled": 0.7536
+          },
+          {
+            "question_id": "q010",
+            "f1_raw": 0.8534,
+            "f1_rescaled": 0.5609
+          },
+          {
+            "question_id": "q011",
+            "f1_raw": 0.8705,
+            "f1_rescaled": 0.612
+          },
+          {
+            "question_id": "q012",
+            "f1_raw": 0.9136,
+            "f1_rescaled": 0.7413
+          },
+          {
+            "question_id": "q013",
+            "f1_raw": 0.8943,
+            "f1_rescaled": 0.6834
+          },
+          {
+            "question_id": "q014",
+            "f1_raw": 0.8619,
+            "f1_rescaled": 0.5863
+          },
+          {
+            "question_id": "q015",
+            "f1_raw": 0.9279,
+            "f1_rescaled": 0.7839
+          },
+          {
+            "question_id": "q016",
+            "f1_raw": 0.8829,
+            "f1_rescaled": 0.6491
+          },
+          {
+            "question_id": "q017",
+            "f1_raw": 0.8801,
+            "f1_rescaled": 0.6407
+          },
+          {
+            "question_id": "q018",
+            "f1_raw": 0.8756,
+            "f1_rescaled": 0.6274
+          },
+          {
+            "question_id": "q019",
+            "f1_raw": 0.9061,
+            "f1_rescaled": 0.7186
+          },
+          {
+            "question_id": "q020",
+            "f1_raw": 0.8816,
+            "f1_rescaled": 0.6453
+          }
+        ]
+      }
+    }
+  },
+  "comparison": {
+    "llm_only": {
+      "judge_pass_rate": 0.35,
+      "bonus_judge_met": false,
+      "bertscore_f1_raw": 0.8166,
+      "bertscore_f1_rescaled": 0.4507,
+      "bonus_bertscore_raw_met": false,
+      "bonus_bertscore_rescaled_met": false
+    },
+    "basic_rag": {
+      "judge_pass_rate": 0.55,
+      "bonus_judge_met": false,
+      "bertscore_f1_raw": 0.8337,
+      "bertscore_f1_rescaled": 0.5018,
+      "bonus_bertscore_raw_met": false,
+      "bonus_bertscore_rescaled_met": false
+    },
+    "graphrag": {
+      "judge_pass_rate": 1.0,
+      "bonus_judge_met": true,
+      "bertscore_f1_raw": 0.9003,
+      "bertscore_f1_rescaled": 0.7013,
+      "bonus_bertscore_raw_met": true,
+      "bonus_bertscore_rescaled_met": true
+    }
+  }
+}

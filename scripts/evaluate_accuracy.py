@@ -319,7 +319,15 @@ def build_report(
     judge_provider: str = "gemini",
 ) -> dict[str, Any]:
     questions = load_questions(questions_path)
-    report: dict[str, Any] = {"pipelines": {}}
+    report: dict[str, Any] = {
+        "metadata": {
+            "judge_provider": judge_provider,
+            "judge_model": model,
+            "bertscore_model": bertscore_model,
+            "bertscore_skipped": skip_bertscore,
+        },
+        "pipelines": {},
+    }
 
     for name in pipelines:
         path = results_paths.get(name)
@@ -370,6 +378,7 @@ def _check(value: bool | None) -> str:
 
 def build_markdown(report: dict[str, Any]) -> str:
     lines = ["# Accuracy Evaluation Report", ""]
+    metadata = report.get("metadata", {})
     lines.append("## Summary")
     lines.append("")
     lines.append("| Pipeline | Judge pass rate | Bonus judge (>=90%) | BERTScore F1 raw | Bonus raw (>=0.88) | BERTScore F1 rescaled | Bonus rescaled (>=0.55) |")
@@ -404,7 +413,17 @@ def build_markdown(report: dict[str, Any]) -> str:
 
     lines.append("")
     lines.append("---")
-    lines.append("*Judge: Gemini LLM-as-a-Judge with lenient partial-coverage prompt (PASS/FAIL). Use --judge-provider xai for cross-family judgment when xAI credits are available. BERTScore uses distilbert-base-uncased by default; use microsoft/deberta-xlarge-mnli for best results.*")
+    judge_provider = metadata.get("judge_provider", "gemini")
+    judge_model = metadata.get("judge_model", DEFAULT_MODEL)
+    bertscore_model = metadata.get("bertscore_model", "distilbert-base-uncased")
+    if judge_provider == "xai":
+        judge_label = f"xAI LLM-as-a-Judge ({judge_model})"
+    else:
+        judge_label = f"Gemini LLM-as-a-Judge ({judge_model})"
+    lines.append(
+        f"*Judge: {judge_label} with the PASS/FAIL grading prompt. "
+        f"BERTScore model: {bertscore_model}.*"
+    )
     return "\n".join(lines)
 
 
@@ -432,7 +451,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--bertscore-model",
         default="distilbert-base-uncased",
-        help="HuggingFace model for BERTScore (default: distilbert-base-uncased).",
+        help="Transformers model for BERTScore (default: distilbert-base-uncased).",
     )
     parser.add_argument(
         "--delay",
@@ -444,7 +463,7 @@ def parse_args() -> argparse.Namespace:
         "--judge-provider",
         choices=["gemini", "xai"],
         default="gemini",
-        help="Judge backend: 'gemini' (default) or 'xai' (Grok — requires XAI_API_KEY with credits).",
+        help="Judge backend: 'gemini' (default final benchmark path) or 'xai'.",
     )
     parser.add_argument(
         "--xai-judge-model",
@@ -459,7 +478,10 @@ def main() -> None:
 
     pipelines = list(DEFAULT_RESULTS.keys()) if args.pipeline == "all" else [args.pipeline]
 
-    judge_model = args.xai_judge_model if args.judge_provider == "xai" else args.model
+    if args.judge_provider == "xai":
+        judge_model = args.xai_judge_model
+    else:
+        judge_model = args.model
 
     report = build_report(
         pipelines=pipelines,
